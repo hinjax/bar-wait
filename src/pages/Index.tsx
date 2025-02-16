@@ -28,8 +28,8 @@ const Index = () => {
         {step === 'home' && (
           <div className="space-y-6 text-center">
             <div className="space-y-2">
-              <h1 className="text-3xl font-bold tracking-tighter">Pub Queue Logger</h1>
-              <p className="text-muted-foreground">Track your wait times at local pubs</p>
+              <h1 className="text-3xl font-bold tracking-tighter">Service Time Tracker</h1>
+              <p className="text-muted-foreground">Monitor wait times and rate service at your favorite establishments</p>
             </div>
             <div className="space-y-4">
               <Button
