@@ -14,7 +14,7 @@ import {
 import { ArrowLeft } from 'lucide-react';
 
 interface PubFormProps {
-  onSubmit: (data: { name: string; location: string; orderType: string }) => void;
+  onSubmit: (data: { name: string; location: string; orderType: string; drinkDetails: string }) => void;
   onBack: () => void;
 }
 
@@ -23,6 +23,7 @@ export const PubForm = ({ onSubmit, onBack }: PubFormProps) => {
     name: '',
     location: '',
     orderType: '',
+    drinkDetails: '',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -89,9 +90,26 @@ export const PubForm = ({ onSubmit, onBack }: PubFormProps) => {
             </SelectContent>
           </Select>
         </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="drinkDetails">Drink Details</Label>
+          <Input
+            id="drinkDetails"
+            required
+            placeholder="e.g., Guinness, Mojito, House Red"
+            value={formData.drinkDetails}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, drinkDetails: e.target.value }))
+            }
+          />
+        </div>
       </div>
 
-      <Button type="submit" className="w-full glass-button" disabled={!formData.name || !formData.location || !formData.orderType}>
+      <Button 
+        type="submit" 
+        className="w-full glass-button" 
+        disabled={!formData.name || !formData.location || !formData.orderType || !formData.drinkDetails}
+      >
         Start Timer
       </Button>
     </form>

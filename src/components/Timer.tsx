@@ -10,6 +10,7 @@ interface TimerProps {
     name: string;
     location: string;
     orderType: string;
+    drinkDetails: string;
   };
   onComplete: () => void;
   onBack: () => void;
@@ -71,7 +72,9 @@ export const Timer = ({ pubData, onComplete, onBack }: TimerProps) => {
       <div className="space-y-4">
         <div className="text-center space-y-2">
           <p className="text-lg font-medium">{pubData.name}</p>
-          <p className="text-sm text-muted-foreground">{pubData.orderType}</p>
+          <p className="text-sm text-muted-foreground">
+            {pubData.orderType} - {pubData.drinkDetails}
+          </p>
         </div>
 
         <div className="flex justify-center">

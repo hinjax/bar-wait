@@ -13,6 +13,7 @@ const Index = () => {
     name: string;
     location: string;
     orderType: string;
+    drinkDetails: string;
   } | null>(null);
 
   return (
