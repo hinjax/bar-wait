@@ -23,12 +23,12 @@ const Index = () => {
   const [pubData, setPubData] = useState<PubData | null>(null);
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-pink-100 via-violet-100 to-blue-200">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-[#fafafa]">
       <Card className="w-full max-w-md p-8 glass-container">
         {step === 'home' && (
           <div className="space-y-8 text-center">
             <div className="space-y-3">
-              <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">
+              <h1 className="text-5xl font-bold tracking-tight text-black">
                 Service Time Tracker
               </h1>
               <p className="text-muted-foreground text-sm">
@@ -38,7 +38,7 @@ const Index = () => {
             <div className="space-y-4">
               <Button
                 onClick={() => setStep('form')}
-                className="w-full h-14 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-lg transition-all duration-300 hover:shadow-xl"
+                className="w-full h-14 bg-black hover:bg-black/90 text-white shadow-lg transition-all duration-300 hover:shadow-xl"
                 size="lg"
               >
                 <Clock className="mr-2 h-5 w-5" />
@@ -47,7 +47,7 @@ const Index = () => {
               <Button
                 onClick={() => setStep('history')}
                 variant="outline"
-                className="w-full h-12 border-2 hover:bg-gradient-to-r hover:from-violet-50 hover:to-indigo-50 transition-all duration-300"
+                className="w-full h-12 border-2 border-black text-black hover:bg-black/5 transition-all duration-300"
               >
                 <HistoryIcon className="mr-2 h-4 w-4" />
                 View History
