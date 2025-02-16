@@ -77,7 +77,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_pub_stats: {
+        Args: {
+          lat: number
+          lng: number
+          radius_meters?: number
+        }
+        Returns: {
+          pub_name: string
+          location: string
+          formatted_address: string
+          avg_rating: number
+          avg_wait_time: number
+          distance_meters: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

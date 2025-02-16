@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Timer } from '@/components/Timer';
 import { PubForm } from '@/components/PubForm';
 import { History } from '@/components/History';
+import { NearbyPlaces } from '@/components/NearbyPlaces';
 import { Clock, History as HistoryIcon } from 'lucide-react';
 
 interface PubData {
@@ -26,8 +27,8 @@ const Index = () => {
     <div className="min-h-screen flex items-center justify-center p-4 bg-[#fafafa]">
       <Card className="w-full max-w-md p-8 glass-container">
         {step === 'home' && (
-          <div className="space-y-8 text-center">
-            <div className="space-y-3">
+          <div className="space-y-8">
+            <div className="text-center space-y-3">
               <h1 className="text-5xl font-bold tracking-tight text-black">
                 Service Time Tracker
               </h1>
@@ -52,6 +53,9 @@ const Index = () => {
                 <HistoryIcon className="mr-2 h-4 w-4" />
                 View History
               </Button>
+            </div>
+            <div className="pt-4 border-t border-black/10">
+              <NearbyPlaces />
             </div>
           </div>
         )}
