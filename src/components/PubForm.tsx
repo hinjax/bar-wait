@@ -1,6 +1,5 @@
 
 import { useState } from 'react';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,9 +11,19 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ArrowLeft } from 'lucide-react';
+import { LocationPicker } from './LocationPicker';
 
 interface PubFormProps {
-  onSubmit: (data: { name: string; location: string; orderType: string; drinkDetails: string }) => void;
+  onSubmit: (data: {
+    name: string;
+    location: string;
+    orderType: string;
+    drinkDetails: string;
+    formatted_address?: string;
+    place_id?: string;
+    latitude?: number;
+    longitude?: number;
+  }) => void;
   onBack: () => void;
 }
 
@@ -24,6 +33,10 @@ export const PubForm = ({ onSubmit, onBack }: PubFormProps) => {
     location: '',
     orderType: '',
     drinkDetails: '',
+    formatted_address: '',
+    place_id: '',
+    latitude: undefined as number | undefined,
+    longitude: undefined as number | undefined,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -59,17 +72,19 @@ export const PubForm = ({ onSubmit, onBack }: PubFormProps) => {
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="location">Location</Label>
-          <Input
-            id="location"
-            required
-            value={formData.location}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, location: e.target.value }))
-            }
-          />
-        </div>
+        <LocationPicker
+          value={formData.location}
+          onChange={(location, placeData) =>
+            setFormData((prev) => ({
+              ...prev,
+              location,
+              formatted_address: placeData?.formatted_address || prev.formatted_address,
+              place_id: placeData?.place_id || prev.place_id,
+              latitude: placeData?.latitude || prev.latitude,
+              longitude: placeData?.longitude || prev.longitude,
+            }))
+          }
+        />
 
         <div className="space-y-2">
           <Label htmlFor="orderType">Order Type</Label>

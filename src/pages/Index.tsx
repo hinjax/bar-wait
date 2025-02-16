@@ -7,14 +7,20 @@ import { PubForm } from '@/components/PubForm';
 import { History } from '@/components/History';
 import { Clock } from 'lucide-react';
 
+interface PubData {
+  name: string;
+  location: string;
+  orderType: string;
+  drinkDetails: string;
+  formatted_address?: string;
+  place_id?: string;
+  latitude?: number;
+  longitude?: number;
+}
+
 const Index = () => {
   const [step, setStep] = useState<'home' | 'form' | 'timer' | 'history'>('home');
-  const [pubData, setPubData] = useState<{
-    name: string;
-    location: string;
-    orderType: string;
-    drinkDetails: string;
-  } | null>(null);
+  const [pubData, setPubData] = useState<PubData | null>(null);
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-amber-50 to-neutral-100">
