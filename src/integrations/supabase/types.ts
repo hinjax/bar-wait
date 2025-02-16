@@ -39,6 +39,7 @@ export type Database = {
           order_type: string
           place_id: string | null
           pub_name: string
+          rating: number | null
           wait_time_seconds: number | null
         }
         Insert: {
@@ -52,6 +53,7 @@ export type Database = {
           order_type: string
           place_id?: string | null
           pub_name: string
+          rating?: number | null
           wait_time_seconds?: number | null
         }
         Update: {
@@ -65,6 +67,7 @@ export type Database = {
           order_type?: string
           place_id?: string | null
           pub_name?: string
+          rating?: number | null
           wait_time_seconds?: number | null
         }
         Relationships: []

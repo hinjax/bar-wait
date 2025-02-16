@@ -2,8 +2,9 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Play, Square } from 'lucide-react';
+import { ArrowLeft, Play, Square, Star } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface TimerProps {
   pubData: {
@@ -11,6 +12,10 @@ interface TimerProps {
     location: string;
     orderType: string;
     drinkDetails: string;
+    formatted_address?: string;
+    place_id?: string;
+    latitude?: number;
+    longitude?: number;
   };
   onComplete: () => void;
   onBack: () => void;
@@ -19,6 +24,8 @@ interface TimerProps {
 export const Timer = ({ pubData, onComplete, onBack }: TimerProps) => {
   const [isRunning, setIsRunning] = useState(false);
   const [time, setTime] = useState(0);
+  const [showRating, setShowRating] = useState(false);
+  const [rating, setRating] = useState(0);
   const [savedTimes, setSavedTimes] = useState<any[]>(() => {
     const saved = localStorage.getItem('pubTimes');
     return saved ? JSON.parse(saved) : [];
@@ -42,16 +49,43 @@ export const Timer = ({ pubData, onComplete, onBack }: TimerProps) => {
 
   const handleStop = () => {
     setIsRunning(false);
-    const newTime = {
-      ...pubData,
-      time,
-      date: new Date().toISOString(),
-    };
-    const updatedTimes = [...savedTimes, newTime];
-    setSavedTimes(updatedTimes);
-    localStorage.setItem('pubTimes', JSON.stringify(updatedTimes));
-    toast.success('Time logged successfully!');
-    onComplete();
+    setShowRating(true);
+  };
+
+  const handleRatingSubmit = async () => {
+    try {
+      const { error } = await supabase.from('pub_visits').insert({
+        pub_name: pubData.name,
+        location: pubData.location,
+        order_type: pubData.orderType,
+        drink_details: pubData.drinkDetails,
+        wait_time_seconds: time,
+        formatted_address: pubData.formatted_address,
+        place_id: pubData.place_id,
+        latitude: pubData.latitude,
+        longitude: pubData.longitude,
+        rating: rating
+      });
+
+      if (error) throw error;
+
+      const newTime = {
+        ...pubData,
+        time,
+        rating,
+        date: new Date().toISOString(),
+      };
+      
+      const updatedTimes = [...savedTimes, newTime];
+      setSavedTimes(updatedTimes);
+      localStorage.setItem('pubTimes', JSON.stringify(updatedTimes));
+      
+      toast.success('Time and rating logged successfully!');
+      onComplete();
+    } catch (error) {
+      console.error('Error saving pub visit:', error);
+      toast.error('Failed to save pub visit');
+    }
   };
 
   return (
@@ -83,27 +117,60 @@ export const Timer = ({ pubData, onComplete, onBack }: TimerProps) => {
           </div>
         </div>
 
-        <div className="flex justify-center space-x-4">
-          {!isRunning ? (
+        {!showRating ? (
+          <div className="flex justify-center space-x-4">
+            {!isRunning ? (
+              <Button
+                onClick={() => setIsRunning(true)}
+                size="lg"
+                className="glass-button"
+              >
+                <Play className="mr-2 h-4 w-4" />
+                Start
+              </Button>
+            ) : (
+              <Button
+                onClick={handleStop}
+                size="lg"
+                variant="destructive"
+              >
+                <Square className="mr-2 h-4 w-4" />
+                Stop
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="text-center">
+              <h3 className="text-lg font-medium mb-2">Service Rating</h3>
+              <div className="flex justify-center space-x-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    onClick={() => setRating(star)}
+                    className="focus:outline-none"
+                  >
+                    <Star
+                      className={`h-8 w-8 ${
+                        star <= rating
+                          ? 'fill-yellow-400 text-yellow-400'
+                          : 'text-gray-300'
+                      }`}
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
             <Button
-              onClick={() => setIsRunning(true)}
+              onClick={handleRatingSubmit}
               size="lg"
-              className="glass-button"
+              className="w-full glass-button"
+              disabled={rating === 0}
             >
-              <Play className="mr-2 h-4 w-4" />
-              Start
+              Submit
             </Button>
-          ) : (
-            <Button
-              onClick={handleStop}
-              size="lg"
-              variant="destructive"
-            >
-              <Square className="mr-2 h-4 w-4" />
-              Stop
-            </Button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

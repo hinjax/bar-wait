@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Clock } from 'lucide-react';
+import { ArrowLeft, Clock, Star } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -63,6 +63,7 @@ export const History = ({ onBack }: HistoryProps) => {
                 <TableHead>Pub</TableHead>
                 <TableHead>Order</TableHead>
                 <TableHead>Time</TableHead>
+                <TableHead>Rating</TableHead>
                 <TableHead>Date</TableHead>
               </TableRow>
             </TableHeader>
@@ -72,6 +73,16 @@ export const History = ({ onBack }: HistoryProps) => {
                   <TableCell>{record.name}</TableCell>
                   <TableCell>{record.orderType}</TableCell>
                   <TableCell>{formatTime(record.time)}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center">
+                      {record.rating && (
+                        <>
+                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
+                          <span>{record.rating}</span>
+                        </>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell>{formatDate(record.date)}</TableCell>
                 </TableRow>
               ))}
