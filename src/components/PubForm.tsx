@@ -41,7 +41,7 @@ export const PubForm = ({ onSubmit, onBack }: PubFormProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    onSubmit({...formData, name: formData.location});
   };
 
   return (
@@ -60,24 +60,13 @@ export const PubForm = ({ onSubmit, onBack }: PubFormProps) => {
       </div>
 
       <div className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="name">Pub Name</Label>
-          <Input
-            id="name"
-            required
-            value={formData.name}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, name: e.target.value }))
-            }
-          />
-        </div>
-
         <LocationPicker
           value={formData.location}
           onChange={(location, placeData) =>
             setFormData((prev) => ({
               ...prev,
               location,
+              name: location,
               formatted_address: placeData?.formatted_address || prev.formatted_address,
               place_id: placeData?.place_id || prev.place_id,
               latitude: placeData?.latitude || prev.latitude,
@@ -123,7 +112,7 @@ export const PubForm = ({ onSubmit, onBack }: PubFormProps) => {
       <Button 
         type="submit" 
         className="w-full glass-button" 
-        disabled={!formData.name || !formData.location || !formData.orderType || !formData.drinkDetails}
+        disabled={!formData.location || !formData.orderType || !formData.drinkDetails}
       >
         Start Timer
       </Button>

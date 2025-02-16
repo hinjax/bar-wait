@@ -4,6 +4,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 
+declare global {
+  interface Window {
+    google: any;
+  }
+}
+
 interface LocationPickerProps {
   value: string;
   onChange: (location: string, placeData?: {
@@ -15,7 +21,7 @@ interface LocationPickerProps {
 }
 
 export const LocationPicker = ({ value, onChange }: LocationPickerProps) => {
-  const autoCompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  const autoCompleteRef = useRef<any>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [apiKey, setApiKey] = useState<string>('');
 
@@ -53,7 +59,7 @@ export const LocationPicker = ({ value, onChange }: LocationPickerProps) => {
   const initializeAutocomplete = () => {
     if (!inputRef.current) return;
 
-    autoCompleteRef.current = new google.maps.places.Autocomplete(inputRef.current, {
+    autoCompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
       types: ['establishment'],
       fields: ['formatted_address', 'geometry', 'place_id', 'name'],
     });
@@ -73,14 +79,14 @@ export const LocationPicker = ({ value, onChange }: LocationPickerProps) => {
 
   return (
     <div className="space-y-2">
-      <Label htmlFor="location">Location</Label>
+      <Label htmlFor="location">Establishment</Label>
       <Input
         ref={inputRef}
         id="location"
         required
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="Start typing to search for pubs..."
+        placeholder="Start typing to search for establishments..."
       />
     </div>
   );
