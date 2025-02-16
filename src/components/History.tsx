@@ -11,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { supabase } from '@/integrations/supabase/client';
 
 interface HistoryProps {
   onBack: () => void;
@@ -18,12 +19,32 @@ interface HistoryProps {
 
 export const History = ({ onBack }: HistoryProps) => {
   const [times, setTimes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const savedTimes = localStorage.getItem('pubTimes');
-    if (savedTimes) {
-      setTimes(JSON.parse(savedTimes));
-    }
+    const fetchHistory = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          setTimes([]);
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from('pub_visits')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        setTimes(data || []);
+      } catch (error) {
+        console.error('Error fetching history:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHistory();
   }, []);
 
   const formatDate = (dateString: string) => {
@@ -35,6 +56,14 @@ export const History = ({ onBack }: HistoryProps) => {
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
+
+  if (loading) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-muted-foreground">Loading history...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -70,9 +99,9 @@ export const History = ({ onBack }: HistoryProps) => {
             <TableBody>
               {times.map((record, index) => (
                 <TableRow key={index}>
-                  <TableCell>{record.name}</TableCell>
-                  <TableCell>{record.orderType}</TableCell>
-                  <TableCell>{formatTime(record.time)}</TableCell>
+                  <TableCell>{record.pub_name}</TableCell>
+                  <TableCell>{record.order_type}</TableCell>
+                  <TableCell>{formatTime(record.wait_time_seconds)}</TableCell>
                   <TableCell>
                     <div className="flex items-center">
                       {record.rating && (
@@ -83,7 +112,7 @@ export const History = ({ onBack }: HistoryProps) => {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell>{formatDate(record.date)}</TableCell>
+                  <TableCell>{formatDate(record.created_at)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

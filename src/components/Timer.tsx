@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -54,6 +53,9 @@ export const Timer = ({ pubData, onComplete, onBack }: TimerProps) => {
 
   const handleRatingSubmit = async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
       const { error } = await supabase.from('pub_visits').insert({
         pub_name: pubData.name,
         location: pubData.location,
@@ -64,7 +66,8 @@ export const Timer = ({ pubData, onComplete, onBack }: TimerProps) => {
         place_id: pubData.place_id,
         latitude: pubData.latitude,
         longitude: pubData.longitude,
-        rating: rating
+        rating: rating,
+        user_id: user.id
       });
 
       if (error) throw error;

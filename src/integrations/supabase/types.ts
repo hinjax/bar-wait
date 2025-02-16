@@ -27,6 +27,27 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          updated_at: string
+          username: string | null
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          updated_at?: string
+          username?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
       pub_visits: {
         Row: {
           created_at: string
@@ -40,6 +61,7 @@ export type Database = {
           place_id: string | null
           pub_name: string
           rating: number | null
+          user_id: string | null
           wait_time_seconds: number | null
         }
         Insert: {
@@ -54,6 +76,7 @@ export type Database = {
           place_id?: string | null
           pub_name: string
           rating?: number | null
+          user_id?: string | null
           wait_time_seconds?: number | null
         }
         Update: {
@@ -68,6 +91,7 @@ export type Database = {
           place_id?: string | null
           pub_name?: string
           rating?: number | null
+          user_id?: string | null
           wait_time_seconds?: number | null
         }
         Relationships: []

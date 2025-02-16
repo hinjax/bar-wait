@@ -1,12 +1,15 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Timer } from '@/components/Timer';
 import { PubForm } from '@/components/PubForm';
 import { History } from '@/components/History';
 import { NearbyPlaces } from '@/components/NearbyPlaces';
-import { Clock, History as HistoryIcon } from 'lucide-react';
+import { AuthUI } from '@/components/AuthUI';
+import { Clock, History as HistoryIcon, LogOut } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface PubData {
   name: string;
@@ -20,8 +23,43 @@ interface PubData {
 }
 
 const Index = () => {
-  const [step, setStep] = useState<'home' | 'form' | 'timer' | 'history'>('home');
+  const [step, setStep] = useState<'home' | 'form' | 'timer' | 'history' | 'auth'>('home');
   const [pubData, setPubData] = useState<PubData | null>(null);
+  const [session, setSession] = useState<any>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast.error('Error signing out');
+    } else {
+      toast.success('Signed out successfully');
+      setStep('home');
+    }
+  };
+
+  if (step === 'auth') {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-[#fafafa]">
+        <Card className="w-full max-w-md p-8">
+          <AuthUI onComplete={() => setStep('home')} />
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-[#fafafa]">
@@ -38,7 +76,7 @@ const Index = () => {
             </div>
             <div className="space-y-4">
               <Button
-                onClick={() => setStep('form')}
+                onClick={() => session ? setStep('form') : setStep('auth')}
                 className="w-full h-14 bg-black hover:bg-black/90 text-white shadow-lg transition-all duration-300 hover:shadow-xl"
                 size="lg"
               >
@@ -46,13 +84,23 @@ const Index = () => {
                 Start New Timer
               </Button>
               <Button
-                onClick={() => setStep('history')}
+                onClick={() => session ? setStep('history') : setStep('auth')}
                 variant="outline"
                 className="w-full h-12 border-2 border-black text-black hover:bg-black/5 transition-all duration-300"
               >
                 <HistoryIcon className="mr-2 h-4 w-4" />
                 View History
               </Button>
+              {session && (
+                <Button
+                  onClick={handleLogout}
+                  variant="ghost"
+                  className="w-full"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sign Out
+                </Button>
+              )}
             </div>
             <div className="pt-4 border-t border-black/10">
               <NearbyPlaces />
