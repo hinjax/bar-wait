@@ -56,7 +56,7 @@ export const PubForm = ({ onSubmit, onBack }: PubFormProps) => {
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h2 className="text-2xl font-bold">Pub Details</h2>
+        <h2 className="text-2xl font-bold">Establishment Details</h2>
       </div>
 
       <div className="space-y-4">
