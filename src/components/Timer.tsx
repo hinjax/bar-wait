@@ -44,7 +44,7 @@ export const Timer = ({ pubData, onComplete, onBack }: TimerProps) => {
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return { mins, secs };
   };
 
   const handleStop = () => {
@@ -88,6 +88,8 @@ export const Timer = ({ pubData, onComplete, onBack }: TimerProps) => {
     }
   };
 
+  const { mins, secs } = formatTime(time);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center mb-6">
@@ -111,10 +113,22 @@ export const Timer = ({ pubData, onComplete, onBack }: TimerProps) => {
           </p>
         </div>
 
-        <div className="flex justify-center">
-          <div className="text-6xl font-mono font-bold py-8">
-            {formatTime(time)}
+        <div className="flex justify-center items-baseline space-x-2 py-8">
+          <div className="text-7xl font-mono font-light tracking-tighter">
+            {mins}
           </div>
+          <div className="text-2xl font-mono text-muted-foreground">m</div>
+          <div className="text-7xl font-mono font-light tracking-tighter">
+            {secs.toString().padStart(2, '0')}
+          </div>
+          <div className="text-2xl font-mono text-muted-foreground">s</div>
+        </div>
+
+        <div className="w-full bg-gray-200 h-0.5 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-blue-500 transition-all duration-1000"
+            style={{ width: `${(time % 60) * 1.67}%` }}
+          />
         </div>
 
         {!showRating ? (
