@@ -65,7 +65,7 @@ export const History = ({ onBack }: HistoryProps) => {
     const parts = formattedAddress.split(',');
     const lastPart = parts[parts.length - 1]?.trim();
     const postcodeMatch = lastPart?.match(/[A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][A-Z]{2}/i);
-    return postcodeMatch ? ` (${postcodeMatch[0]})` : '';
+    return postcodeMatch ? postcodeMatch[0] : '';
   };
 
   if (loading) {
@@ -112,9 +112,11 @@ export const History = ({ onBack }: HistoryProps) => {
                 <TableRow key={index}>
                   <TableCell>
                     {record.pub_name}
-                    <span className="text-muted-foreground text-sm">
-                      {extractPostcode(record.formatted_address)}
-                    </span>
+                    {extractPostcode(record.formatted_address) && (
+                      <span className="ml-2 font-medium">
+                        ({extractPostcode(record.formatted_address)})
+                      </span>
+                    )}
                   </TableCell>
                   <TableCell>{record.order_type}</TableCell>
                   <TableCell>{formatTime(record.wait_time_seconds)}</TableCell>
