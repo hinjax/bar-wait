@@ -72,6 +72,7 @@ const Index = () => {
       drinkDetails: ''
     });
     setStep('form');
+    setShowSearch(false); // Reset search state when starting timer
   };
 
   const handleLogout = async () => {
@@ -188,21 +189,30 @@ const Index = () => {
               setPubData(data);
               setStep('timer');
             }}
-            onBack={() => setStep('home')}
+            onBack={() => {
+              setStep('home');
+              setShowSearch(false);
+            }}
           />
         )}
 
         {step === 'timer' && pubData && (
           <Timer
             pubData={pubData}
-            onComplete={() => setStep('home')}
+            onComplete={() => {
+              setStep('home');
+              setShowSearch(false);
+            }}
             onBack={() => setStep('form')}
             autoStart={true}
           />
         )}
 
         {step === 'history' && (
-          <History onBack={() => setStep('home')} />
+          <History onBack={() => {
+            setStep('home');
+            setShowSearch(false);
+          }} />
         )}
       </Card>
     </div>
