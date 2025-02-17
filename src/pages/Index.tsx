@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,16 +27,21 @@ const Index = () => {
   const [pubData, setPubData] = useState<PubData | null>(null);
   const [session, setSession] = useState<any>(null);
   const [showSearch, setShowSearch] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
+    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      setSession(currentSession);
+      setLoading(false);
     });
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
+      if (!session) {
+        setStep('auth');
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -50,6 +54,12 @@ const Index = () => {
     latitude?: number;
     longitude?: number;
   }) => {
+    if (!session) {
+      toast.error('Please sign in to start a timer');
+      setStep('auth');
+      return;
+    }
+
     setPubData({
       name: pubData.name,
       location: pubData.name,
@@ -64,14 +74,35 @@ const Index = () => {
   };
 
   const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast.error('Error signing out');
-    } else {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
       toast.success('Signed out successfully');
-      setStep('home');
+      setStep('auth');
+    } catch (error: any) {
+      toast.error(error.message || 'Error signing out');
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-[#fafafa]">
+        <Card className="w-full max-w-md p-8">
+          <div className="text-center">Loading...</div>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!session && step !== 'auth') {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-[#fafafa]">
+        <Card className="w-full max-w-md p-8">
+          <AuthUI onComplete={() => setStep('home')} />
+        </Card>
+      </div>
+    );
+  }
 
   if (step === 'auth') {
     return (
