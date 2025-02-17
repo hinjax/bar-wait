@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -243,10 +244,9 @@ export const Timer = ({ pubData, onComplete, onBack, autoStart = false }: TimerP
           
           <Button
             onClick={() => {
-              setTime(0);
-              setRating(0);
-              setShowCompletion(false);
-              setIsRunning(true);
+              onComplete();
+              // Navigate back to form to select a new drink
+              onBack();
             }}
             variant="outline"
             className="w-full h-12 border-2 border-black text-black hover:bg-black/5"
