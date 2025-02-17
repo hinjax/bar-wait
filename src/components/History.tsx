@@ -60,12 +60,19 @@ export const History = ({ onBack }: HistoryProps) => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const extractPostcode = (formattedAddress: string) => {
-    if (!formattedAddress) return '';
+  const extractLocationInfo = (formattedAddress: string) => {
+    if (!formattedAddress) return { city: '', postcode: '' };
     const parts = formattedAddress.split(',');
     const lastPart = parts[parts.length - 1]?.trim();
+    const secondLastPart = parts[parts.length - 2]?.trim() || '';
+    
     const postcodeMatch = lastPart?.match(/[A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][A-Z]{2}/i);
-    return postcodeMatch ? postcodeMatch[0] : '';
+    const postcode = postcodeMatch ? postcodeMatch[0] : '';
+    
+    // Clean up city name (remove postcode if it exists in the city part)
+    const city = secondLastPart.replace(/[A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][A-Z]{2}/i, '').trim();
+    
+    return { city, postcode };
   };
 
   if (loading) {
@@ -101,6 +108,7 @@ export const History = ({ onBack }: HistoryProps) => {
             <TableHeader>
               <TableRow>
                 <TableHead>Establishment</TableHead>
+                <TableHead>City & Postcode</TableHead>
                 <TableHead>Order</TableHead>
                 <TableHead>Time</TableHead>
                 <TableHead>Rating</TableHead>
@@ -108,31 +116,35 @@ export const History = ({ onBack }: HistoryProps) => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {times.map((record, index) => (
-                <TableRow key={index}>
-                  <TableCell>
-                    {record.pub_name}
-                    {extractPostcode(record.formatted_address) && (
-                      <span className="ml-2 font-medium">
-                        ({extractPostcode(record.formatted_address)})
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell>{record.order_type}</TableCell>
-                  <TableCell>{formatTime(record.wait_time_seconds)}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center">
-                      {record.rating && (
-                        <>
-                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
-                          <span>{record.rating}</span>
-                        </>
+              {times.map((record, index) => {
+                const { city, postcode } = extractLocationInfo(record.formatted_address);
+                return (
+                  <TableRow key={index}>
+                    <TableCell>{record.pub_name}</TableCell>
+                    <TableCell>
+                      {city && <span>{city}</span>}
+                      {postcode && (
+                        <span className="ml-2 font-medium">
+                          {postcode}
+                        </span>
                       )}
-                    </div>
-                  </TableCell>
-                  <TableCell>{formatDateTime(record.created_at)}</TableCell>
-                </TableRow>
-              ))}
+                    </TableCell>
+                    <TableCell>{record.order_type}</TableCell>
+                    <TableCell>{formatTime(record.wait_time_seconds)}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center">
+                        {record.rating && (
+                          <>
+                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
+                            <span>{record.rating}</span>
+                          </>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>{formatDateTime(record.created_at)}</TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </div>
