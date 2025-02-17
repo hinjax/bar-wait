@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Clock, Star, MapPin, Loader2 } from 'lucide-react';
@@ -124,27 +125,46 @@ export const NearbyPlaces = ({ onStartTimer }: NearbyPlacesProps) => {
         position.coords.longitude
       );
 
-      const request: google.maps.places.PlaceSearchRequest = {
+      // First search for bars
+      const barRequest: google.maps.places.PlaceSearchRequest = {
         location: userLocation,
         radius: 5000,
-        type: 'bar'
+        type: 'bar',
+        keyword: 'pub|bar|tavern'
       };
 
       service.nearbySearch(
-        request,
+        barRequest,
         async (
           results: google.maps.places.PlaceResult[] | null,
           status: google.maps.places.PlacesServiceStatus
         ) => {
           if (status === google.maps.places.PlacesServiceStatus.OK && results) {
-            const placesWithDistances = await calculateDistances(userLocation, results);
+            // Filter results to only include places that have "pub", "bar", or "tavern" in their types or name
+            const filteredResults = results.filter(place => {
+              const types = place.types || [];
+              const name = (place.name || '').toLowerCase();
+              return (
+                types.includes('bar') ||
+                types.includes('night_club') ||
+                name.includes('pub') ||
+                name.includes('bar') ||
+                name.includes('tavern')
+              );
+            });
+
+            const placesWithDistances = await calculateDistances(userLocation, filteredResults);
             
             const sortedPlaces = placesWithDistances
               .sort((a, b) => a.distance_meters - b.distance_meters)
               .slice(0, 5);
 
             setPlaces(sortedPlaces);
-            toast.success(`Found ${sortedPlaces.length} nearby pubs and bars`);
+            if (sortedPlaces.length > 0) {
+              toast.success(`Found ${sortedPlaces.length} nearby pubs and bars`);
+            } else {
+              toast.info('No pubs or bars found nearby');
+            }
           } else {
             setPlaces([]);
             toast.info('No pubs or bars found nearby');
@@ -243,7 +263,7 @@ export const NearbyPlaces = ({ onStartTimer }: NearbyPlacesProps) => {
       <div className="flex justify-between items-center mb-4">
         <h2 className="font-medium flex items-center gap-2">
           <MapPin className="h-4 w-4" />
-          Nearby Places
+          Nearby Pubs & Bars
         </h2>
         <Button 
           variant="ghost" 
