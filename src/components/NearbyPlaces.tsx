@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Clock, Star, MapPin } from 'lucide-react';
+import { Clock, Star, MapPin, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
@@ -20,90 +20,89 @@ interface NearbyPlacesProps {
 
 export const NearbyPlaces = ({ onStartTimer }: NearbyPlacesProps) => {
   const [places, setPlaces] = useState<PubStats[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [locationRequested, setLocationRequested] = useState(false);
 
   const requestLocationAndFetchPlaces = async () => {
     setLocationRequested(true);
     setLoading(true);
+    setError(null);
+    
     try {
-      if ('geolocation' in navigator) {
-        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, {
-            enableHighAccuracy: true,
-            timeout: 5000,
-            maximumAge: 0
-          });
-        });
-
-        const { data, error: dbError } = await supabase.rpc('get_pub_stats', {
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-          radius_meters: 5000 // Reduced radius to 5km for more relevant results
-        });
-
-        if (dbError) throw dbError;
-        
-        // Sort places by distance
-        const sortedPlaces = (data || []).sort((a, b) => 
-          a.distance_meters - b.distance_meters
-        );
-        
-        setPlaces(sortedPlaces);
-        toast.success('Found nearby places!');
-      } else {
-        setError("Geolocation is not supported by your browser");
-        toast.error("Your browser doesn't support location services");
+      if (!('geolocation' in navigator)) {
+        throw new Error("Geolocation is not supported by your browser");
       }
+
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        });
+      });
+
+      const { data, error: dbError } = await supabase.rpc('get_pub_stats', {
+        lat: position.coords.latitude,
+        lng: position.coords.longitude,
+        radius_meters: 10000 // Increased radius to 10km for more results
+      });
+
+      if (dbError) {
+        console.error('Database error:', dbError);
+        throw new Error("Could not fetch places data");
+      }
+      
+      if (!data || data.length === 0) {
+        setPlaces([]);
+        toast.info('No establishments found within 10km');
+        return;
+      }
+      
+      // Sort places by distance
+      const sortedPlaces = data.sort((a, b) => a.distance_meters - b.distance_meters);
+      setPlaces(sortedPlaces);
+      toast.success(`Found ${sortedPlaces.length} nearby establishments`);
+      
     } catch (err) {
-      console.error(err);
+      console.error('Error fetching nearby places:', err);
+      let errorMessage = "An error occurred while finding nearby places";
+      
       if (err instanceof GeolocationPositionError) {
         switch(err.code) {
           case err.PERMISSION_DENIED:
-            setError("Location permission denied. Please enable location services to see nearby places.");
-            toast.error("Location permission denied");
+            errorMessage = "Location permission denied. Please enable location services to see nearby places.";
             break;
           case err.POSITION_UNAVAILABLE:
-            setError("Location information is unavailable.");
-            toast.error("Couldn't get your location");
+            errorMessage = "Location information is unavailable.";
             break;
           case err.TIMEOUT:
-            setError("Location request timed out.");
-            toast.error("Location request timed out");
+            errorMessage = "Location request timed out.";
             break;
-          default:
-            setError("Could not fetch places data");
-            toast.error("Error finding nearby places");
         }
-      } else {
-        setError("Could not fetch places data");
-        toast.error("Error finding nearby places");
       }
+      
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
-  if (!locationRequested) {
-    return (
-      <div className="text-center space-y-4">
-        <p className="text-muted-foreground">
-          Would you like to see bars and restaurants near you?
-        </p>
-        <Button 
-          onClick={requestLocationAndFetchPlaces}
-          className="bg-black hover:bg-black/90"
-        >
-          <MapPin className="h-4 w-4 mr-2" />
-          Share Location
-        </Button>
-      </div>
-    );
-  }
+  useEffect(() => {
+    // Automatically request location when component mounts
+    if (!locationRequested && !loading && !places.length) {
+      requestLocationAndFetchPlaces();
+    }
+  }, [locationRequested, loading, places.length]);
 
   if (loading) {
-    return <div className="text-center text-muted-foreground">Finding places near you...</div>;
+    return (
+      <div className="text-center space-y-4 py-8">
+        <Loader2 className="h-8 w-8 animate-spin mx-auto text-black" />
+        <p className="text-muted-foreground">Finding places near you...</p>
+      </div>
+    );
   }
 
   if (error) {
@@ -138,12 +137,22 @@ export const NearbyPlaces = ({ onStartTimer }: NearbyPlacesProps) => {
         </Button>
       </div>
       {places.length === 0 ? (
-        <div className="text-center text-muted-foreground">No places found nearby</div>
+        <div className="text-center py-4">
+          <p className="text-muted-foreground">No places found nearby</p>
+          <Button
+            onClick={requestLocationAndFetchPlaces}
+            variant="ghost"
+            size="sm"
+            className="mt-2"
+          >
+            Retry Search
+          </Button>
+        </div>
       ) : (
         <div className="space-y-3">
-          {places.map((place) => (
+          {places.map((place, index) => (
             <div 
-              key={place.pub_name + place.location} 
+              key={`${place.pub_name}-${index}`}
               className="p-4 border border-black/10 rounded-xl bg-white/50 backdrop-blur-sm cursor-pointer hover:bg-white/80 transition-colors"
               onClick={() => onStartTimer?.({
                 name: place.pub_name,
