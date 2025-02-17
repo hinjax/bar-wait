@@ -12,6 +12,7 @@ declare global {
 
 interface LocationPickerProps {
   value: string;
+  initialValue?: string;
   onChange: (location: string, placeData?: {
     formatted_address: string;
     place_id: string;
@@ -20,10 +21,16 @@ interface LocationPickerProps {
   }) => void;
 }
 
-export const LocationPicker = ({ value, onChange }: LocationPickerProps) => {
+export const LocationPicker = ({ value, initialValue, onChange }: LocationPickerProps) => {
   const autoCompleteRef = useRef<any>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [apiKey, setApiKey] = useState<string>('');
+
+  useEffect(() => {
+    if (initialValue && !value) {
+      onChange(initialValue);
+    }
+  }, [initialValue, value, onChange]);
 
   useEffect(() => {
     const loadGoogleMapsAPI = async () => {
