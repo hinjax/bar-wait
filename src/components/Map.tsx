@@ -1,4 +1,5 @@
 
+/// <reference types="google.maps" />
 import { useEffect, useRef } from 'react';
 import { Card } from './ui/card';
 import { Loader2 } from 'lucide-react';
@@ -7,8 +8,8 @@ interface MapProps {
   userLocation?: { lat: number; lng: number };
   places?: Array<{
     pub_name: string;
-    latitude: number;
-    longitude: number;
+    latitude?: number;
+    longitude?: number;
     formatted_address: string;
   }>;
   height?: string;
@@ -24,7 +25,7 @@ export const Map = ({ userLocation, places = [], height = "300px" }: MapProps) =
       if (!mapRef.current || !userLocation) return;
 
       // Initialize the map
-      const map = new google.maps.Map(mapRef.current, {
+      const map = new window.google.maps.Map(mapRef.current, {
         center: userLocation,
         zoom: 13,
         styles: [
@@ -39,11 +40,11 @@ export const Map = ({ userLocation, places = [], height = "300px" }: MapProps) =
       mapInstanceRef.current = map;
 
       // Add user location marker
-      new google.maps.Marker({
+      new window.google.maps.Marker({
         position: userLocation,
         map: map,
         icon: {
-          path: google.maps.SymbolPath.CIRCLE,
+          path: window.google.maps.SymbolPath.CIRCLE,
           scale: 8,
           fillColor: "#000",
           fillOpacity: 1,
@@ -56,13 +57,13 @@ export const Map = ({ userLocation, places = [], height = "300px" }: MapProps) =
       // Add place markers
       places.forEach((place) => {
         if (place.latitude && place.longitude) {
-          const marker = new google.maps.Marker({
+          const marker = new window.google.maps.Marker({
             position: { lat: place.latitude, lng: place.longitude },
             map: map,
             title: place.pub_name,
           });
 
-          const infoWindow = new google.maps.InfoWindow({
+          const infoWindow = new window.google.maps.InfoWindow({
             content: `
               <div class="p-2">
                 <h3 class="font-medium">${place.pub_name}</h3>

@@ -173,9 +173,11 @@ const Index = () => {
               </div>
             )}
             
-            <div className="pt-4 border-t border-black/10">
-              <NearbyPlaces onStartTimer={handleStartTimer} />
-            </div>
+            {!showSearch && (
+              <div className="pt-4 border-t border-black/10">
+                <NearbyPlaces onStartTimer={handleStartTimer} />
+              </div>
+            )}
           </div>
         )}
 
