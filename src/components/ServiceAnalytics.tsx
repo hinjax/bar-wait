@@ -27,6 +27,7 @@ export const ServiceAnalytics = ({ onStartTimer }: ServiceAnalyticsProps) => {
   const [results, setResults] = useState<PubStats[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [lastSearchedPlace, setLastSearchedPlace] = useState<{ name: string; formatted_address: string } | null>(null);
   const autoCompleteRef = useRef<any>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -81,7 +82,15 @@ export const ServiceAnalytics = ({ onStartTimer }: ServiceAnalyticsProps) => {
     
     setLoading(true);
     try {
-      // Get pub stats
+      const place = autoCompleteRef.current?.getPlace();
+      setLastSearchedPlace(place ? {
+        name: place.name,
+        formatted_address: place.formatted_address
+      } : {
+        name: placeName,
+        formatted_address: placeName
+      });
+
       const { data: pubStats, error: pubError } = await supabase
         .from('pub_visits')
         .select('pub_name, formatted_address, wait_time_seconds')
@@ -96,11 +105,9 @@ export const ServiceAnalytics = ({ onStartTimer }: ServiceAnalyticsProps) => {
         return;
       }
 
-      // Process results to get statistics
       const pubMap = new Map<string, PubStats>();
 
       for (const pub of pubStats) {
-        // Get drink stats for this pub
         const { data: drinkStats, error: drinkError } = await supabase
           .from('pub_visits')
           .select('drink_details, wait_time_seconds')
@@ -108,7 +115,6 @@ export const ServiceAnalytics = ({ onStartTimer }: ServiceAnalyticsProps) => {
 
         if (drinkError) throw drinkError;
 
-        // Calculate drink-specific statistics
         const drinkMap = new Map<string, { total: number, count: number }>();
         drinkStats?.forEach(visit => {
           const current = drinkMap.get(visit.drink_details) || { total: 0, count: 0 };
@@ -124,7 +130,6 @@ export const ServiceAnalytics = ({ onStartTimer }: ServiceAnalyticsProps) => {
           count: stats.count
         }));
 
-        // Calculate pub-level statistics
         const existingPub = pubMap.get(pub.pub_name);
         if (!existingPub) {
           pubMap.set(pub.pub_name, {
@@ -177,8 +182,19 @@ export const ServiceAnalytics = ({ onStartTimer }: ServiceAnalyticsProps) => {
           Searching...
         </div>
       ) : searched && results.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground">
-          No results found
+        <div className="text-center py-8 space-y-4">
+          <p className="text-muted-foreground">
+            No previous visits found for this place
+          </p>
+          {lastSearchedPlace && onStartTimer && (
+            <Button
+              onClick={() => onStartTimer(lastSearchedPlace)}
+              className="bg-black hover:bg-black/90"
+            >
+              <Timer className="h-4 w-4 mr-2" />
+              Start First Timer
+            </Button>
+          )}
         </div>
       ) : (
         <div className="space-y-4">
