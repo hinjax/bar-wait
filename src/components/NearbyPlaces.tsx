@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Clock, Star, MapPin, Loader2 } from 'lucide-react';
@@ -65,6 +64,50 @@ export const NearbyPlaces = ({ onStartTimer }: NearbyPlacesProps) => {
     loadGoogleMapsAPI();
   }, []);
 
+  const calculateDistances = async (
+    userLocation: google.maps.LatLng,
+    places: google.maps.places.PlaceResult[]
+  ): Promise<PubStats[]> => {
+    const service = new window.google.maps.DistanceMatrixService();
+    
+    const destinations = places.map(place => ({
+      lat: place.geometry?.location?.lat() || 0,
+      lng: place.geometry?.location?.lng() || 0
+    }));
+
+    try {
+      const response = await service.getDistanceMatrix({
+        origins: [userLocation],
+        destinations: destinations.map(dest => new google.maps.LatLng(dest.lat, dest.lng)),
+        travelMode: google.maps.TravelMode.WALKING,
+        unitSystem: google.maps.UnitSystem.METRIC
+      });
+
+      return places.map((place, index) => ({
+        pub_name: place.name || '',
+        location: place.vicinity || '',
+        formatted_address: place.vicinity || '',
+        avg_rating: place.rating || 0,
+        avg_wait_time: 0,
+        distance_meters: response.rows[0].elements[index].distance?.value || 0,
+        latitude: place.geometry?.location?.lat(),
+        longitude: place.geometry?.location?.lng(),
+      }));
+    } catch (error) {
+      console.error('Error calculating distances:', error);
+      return places.map(place => ({
+        pub_name: place.name || '',
+        location: place.vicinity || '',
+        formatted_address: place.vicinity || '',
+        avg_rating: place.rating || 0,
+        avg_wait_time: 0,
+        distance_meters: 0,
+        latitude: place.geometry?.location?.lat(),
+        longitude: place.geometry?.location?.lng(),
+      }));
+    }
+  };
+
   const searchNearbyPubs = async (position: GeolocationPosition) => {
     if (!window.google || !scriptLoaded) {
       toast.error('Google Maps not loaded yet. Please try again.');
@@ -76,35 +119,32 @@ export const NearbyPlaces = ({ onStartTimer }: NearbyPlacesProps) => {
         new window.google.maps.Map(document.createElement('div'))
       );
 
+      const userLocation = new window.google.maps.LatLng(
+        position.coords.latitude,
+        position.coords.longitude
+      );
+
       const request: google.maps.places.PlaceSearchRequest = {
-        location: new window.google.maps.LatLng(
-          position.coords.latitude,
-          position.coords.longitude
-        ),
+        location: userLocation,
         radius: 5000,
         type: 'bar'
       };
 
       service.nearbySearch(
         request,
-        (
+        async (
           results: google.maps.places.PlaceResult[] | null,
           status: google.maps.places.PlacesServiceStatus
         ) => {
           if (status === google.maps.places.PlacesServiceStatus.OK && results) {
-            const placesData = results.map((place) => ({
-              pub_name: place.name || '',
-              location: place.vicinity || '',
-              formatted_address: place.vicinity || '',
-              avg_rating: place.rating || 0,
-              avg_wait_time: 0,
-              distance_meters: 0,
-              latitude: place.geometry?.location?.lat(),
-              longitude: place.geometry?.location?.lng(),
-            }));
+            const placesWithDistances = await calculateDistances(userLocation, results);
+            
+            const sortedPlaces = placesWithDistances
+              .sort((a, b) => a.distance_meters - b.distance_meters)
+              .slice(0, 5);
 
-            setPlaces(placesData);
-            toast.success(`Found ${placesData.length} nearby pubs and bars`);
+            setPlaces(sortedPlaces);
+            toast.success(`Found ${sortedPlaces.length} nearby pubs and bars`);
           } else {
             setPlaces([]);
             toast.info('No pubs or bars found nearby');
