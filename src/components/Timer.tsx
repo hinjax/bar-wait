@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Play, Square, Star } from 'lucide-react';
+import { ArrowLeft, Play, Square, Star, History, MapPin, RotateCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -27,11 +27,12 @@ export const Timer = ({ pubData, onComplete, onBack, autoStart = false }: TimerP
   const [time, setTime] = useState(0);
   const [showRating, setShowRating] = useState(false);
   const [rating, setRating] = useState(0);
-  const [savedTimes, setSavedTimes] = useState<any[]>(() => {
-    const saved = localStorage.getItem('pubTimes');
-    return saved ? JSON.parse(saved) : [];
-  });
-
+  const [showCompletion, setShowCompletion] = useState(false);
+  const [savedTime, setSavedTime] = useState<{
+    timeString: string;
+    rating: number;
+  } | null>(null);
+  
   useEffect(() => {
     let interval: number;
     if (isRunning) {
@@ -77,25 +78,11 @@ export const Timer = ({ pubData, onComplete, onBack, autoStart = false }: TimerP
 
       if (error) throw error;
 
-      const newTime = {
-        ...pubData,
-        time,
-        rating,
-        date: new Date().toISOString(),
-      };
+      setSavedTime({ timeString, rating });
+      setShowRating(false);
+      setShowCompletion(true);
       
-      const updatedTimes = [...savedTimes, newTime];
-      setSavedTimes(updatedTimes);
-      localStorage.setItem('pubTimes', JSON.stringify(updatedTimes));
-      
-      toast.success(
-        `Thank you for your feedback!\n\nLocation: ${pubData.name}\nOrder: ${pubData.orderType} - ${pubData.drinkDetails}\nWait Time: ${timeString}\nRating: ${rating} stars`,
-        {
-          duration: 5000,
-        }
-      );
-      
-      onComplete();
+      toast.success('Successfully saved your visit!');
     } catch (error) {
       console.error('Error saving pub visit:', error);
       toast.error('Failed to save pub visit');
@@ -103,6 +90,70 @@ export const Timer = ({ pubData, onComplete, onBack, autoStart = false }: TimerP
   };
 
   const { mins, secs } = formatTime(time);
+
+  if (showCompletion && savedTime) {
+    return (
+      <div className="space-y-8">
+        <div className="text-center space-y-4">
+          <h2 className="text-2xl font-bold">Thank You!</h2>
+          <div className="space-y-2">
+            <p className="text-lg font-medium">{pubData.name}</p>
+            <p className="text-sm text-muted-foreground">
+              {pubData.orderType} - {pubData.drinkDetails}
+            </p>
+            <div className="flex justify-center items-center gap-4 text-sm">
+              <div className="flex items-center gap-1">
+                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                <span>{savedTime.rating}</span>
+              </div>
+              <span className="text-muted-foreground">
+                Wait time: {savedTime.timeString}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium text-center mb-4">What would you like to do next?</h3>
+          
+          <Button
+            onClick={() => onComplete()}
+            className="w-full h-12 border-2 border-black text-black hover:bg-black/5"
+            variant="outline"
+          >
+            <MapPin className="mr-2 h-4 w-4" />
+            Find Another Place
+          </Button>
+          
+          <Button
+            onClick={() => {
+              setTime(0);
+              setRating(0);
+              setShowCompletion(false);
+              setIsRunning(true);
+            }}
+            variant="outline"
+            className="w-full h-12 border-2 border-black text-black hover:bg-black/5"
+          >
+            <RotateCw className="mr-2 h-4 w-4" />
+            Time Another Order Here
+          </Button>
+          
+          <Button
+            onClick={() => {
+              onComplete();
+              // You can add navigation to history here if needed
+            }}
+            variant="outline"
+            className="w-full h-12 border-2 border-black text-black hover:bg-black/5"
+          >
+            <History className="mr-2 h-4 w-4" />
+            View History
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
