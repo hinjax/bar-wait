@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Clock, Star, MapPin, Loader2 } from 'lucide-react';
@@ -33,49 +32,84 @@ export const NearbyPlaces = ({ onStartTimer }: NearbyPlacesProps) => {
   const [error, setError] = useState<string | null>(null);
   const [locationRequested, setLocationRequested] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [scriptLoaded, setScriptLoaded] = useState(false);
+
+  useEffect(() => {
+    const loadGoogleMapsAPI = async () => {
+      try {
+        const { data: apiKeyData, error: apiKeyError } = await supabase
+          .from('app_secrets')
+          .select('value')
+          .eq('key', 'GOOGLE_MAPS_API_KEY')
+          .single();
+
+        if (apiKeyError) throw apiKeyError;
+        
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKeyData.value}&libraries=places`;
+        script.async = true;
+        script.defer = true;
+        script.onload = () => setScriptLoaded(true);
+        document.head.appendChild(script);
+
+        return () => {
+          document.head.removeChild(script);
+        };
+      } catch (error) {
+        console.error('Error loading Google Maps API:', error);
+        toast.error('Failed to load Google Maps');
+      }
+    };
+
+    loadGoogleMapsAPI();
+  }, []);
 
   const searchNearbyPubs = async (position: GeolocationPosition) => {
+    if (!window.google || !scriptLoaded) {
+      toast.error('Google Maps not loaded yet. Please try again.');
+      return;
+    }
+
     try {
-      const { data: apiKeyData, error: apiKeyError } = await supabase
-        .from('app_secrets')
-        .select('value')
-        .eq('key', 'GOOGLE_MAPS_API_KEY')
-        .single();
-
-      if (apiKeyError) throw apiKeyError;
-
-      const response = await fetch(
-        `https://maps.googleapis.com/maps/api/place/nearbysearch/json?` +
-        `location=${position.coords.latitude},${position.coords.longitude}&` +
-        `radius=5000&` +
-        `type=bar|pub&` +
-        `key=${apiKeyData.value}`
+      const service = new window.google.maps.places.PlacesService(
+        new window.google.maps.Map(document.createElement('div'))
       );
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch nearby places');
-      }
+      const request = {
+        location: new window.google.maps.LatLng(
+          position.coords.latitude,
+          position.coords.longitude
+        ),
+        radius: 5000,
+        type: ['bar'] as google.maps.places.PlaceType[]
+      };
 
-      const data = await response.json();
-      
-      if (data.status === 'OK' && data.results) {
-        const placesData = data.results.map((place: any) => ({
-          pub_name: place.name,
-          location: place.vicinity,
-          formatted_address: place.vicinity,
-          avg_rating: place.rating || 0,
-          avg_wait_time: 0, // We'll get this from our database
-          distance_meters: place.distance || 0,
-          latitude: place.geometry.location.lat,
-          longitude: place.geometry.location.lng,
-        }));
+      service.nearbySearch(
+        request,
+        (
+          results: google.maps.places.PlaceResult[] | null,
+          status: google.maps.places.PlacesServiceStatus
+        ) => {
+          if (status === google.maps.places.PlacesServiceStatus.OK && results) {
+            const placesData = results.map((place) => ({
+              pub_name: place.name || '',
+              location: place.vicinity || '',
+              formatted_address: place.vicinity || '',
+              avg_rating: place.rating || 0,
+              avg_wait_time: 0,
+              distance_meters: 0,
+              latitude: place.geometry?.location?.lat(),
+              longitude: place.geometry?.location?.lng(),
+            }));
 
-        setPlaces(placesData);
-        toast.success(`Found ${placesData.length} nearby pubs and bars`);
-      } else {
-        setPlaces([]);
-        toast.info('No pubs or bars found nearby');
-      }
+            setPlaces(placesData);
+            toast.success(`Found ${placesData.length} nearby pubs and bars`);
+          } else {
+            setPlaces([]);
+            toast.info('No pubs or bars found nearby');
+          }
+        }
+      );
     } catch (err) {
       console.error('Error fetching nearby places:', err);
       toast.error('Failed to fetch nearby places');
@@ -134,10 +168,10 @@ export const NearbyPlaces = ({ onStartTimer }: NearbyPlacesProps) => {
   };
 
   useEffect(() => {
-    if (!locationRequested && !loading && !places.length) {
+    if (!locationRequested && !loading && !places.length && scriptLoaded) {
       requestLocationAndFetchPlaces();
     }
-  }, [locationRequested, loading, places.length]);
+  }, [locationRequested, loading, places.length, scriptLoaded]);
 
   if (loading) {
     return (
