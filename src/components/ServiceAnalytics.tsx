@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -6,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface DrinkStats {
   drink_details: string;
+  order_type: string;
   avg_wait_time: number;
   count: number;
 }
@@ -110,22 +112,25 @@ export const ServiceAnalytics = ({ onStartTimer }: ServiceAnalyticsProps) => {
       for (const pub of pubStats) {
         const { data: drinkStats, error: drinkError } = await supabase
           .from('pub_visits')
-          .select('drink_details, wait_time_seconds')
+          .select('drink_details, order_type, wait_time_seconds')
           .eq('pub_name', pub.pub_name);
 
         if (drinkError) throw drinkError;
 
-        const drinkMap = new Map<string, { total: number, count: number }>();
+        const drinkMap = new Map<string, { total: number, count: number, order_type: string }>();
         drinkStats?.forEach(visit => {
-          const current = drinkMap.get(visit.drink_details) || { total: 0, count: 0 };
-          drinkMap.set(visit.drink_details, {
+          const key = `${visit.order_type} - ${visit.drink_details}`;
+          const current = drinkMap.get(key) || { total: 0, count: 0, order_type: visit.order_type };
+          drinkMap.set(key, {
             total: current.total + visit.wait_time_seconds,
-            count: current.count + 1
+            count: current.count + 1,
+            order_type: visit.order_type
           });
         });
 
-        const drinkStatsArray: DrinkStats[] = Array.from(drinkMap.entries()).map(([drink, stats]) => ({
-          drink_details: drink,
+        const drinkStatsArray: DrinkStats[] = Array.from(drinkMap.entries()).map(([key, stats]) => ({
+          drink_details: key.split(' - ')[1],
+          order_type: stats.order_type,
           avg_wait_time: stats.total / stats.count,
           count: stats.count
         }));
@@ -237,10 +242,10 @@ export const ServiceAnalytics = ({ onStartTimer }: ServiceAnalyticsProps) => {
                 <div className="grid gap-2">
                   {pub.drink_stats.map((drink) => (
                     <div 
-                      key={drink.drink_details}
+                      key={`${drink.order_type}-${drink.drink_details}`}
                       className="text-sm flex items-center justify-between p-2 bg-black/5 rounded"
                     >
-                      <span>{drink.drink_details}</span>
+                      <span>{drink.order_type} - {drink.drink_details}</span>
                       <div className="flex items-center gap-2">
                         <span>{formatTime(drink.avg_wait_time)}</span>
                         <span className="text-muted-foreground text-xs">
