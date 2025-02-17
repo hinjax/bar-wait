@@ -60,27 +60,27 @@ export const History = ({ onBack }: HistoryProps) => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const extractLocationInfo = (formattedAddress: string) => {
-    if (!formattedAddress) return { city: '', postcode: '' };
+  const extractLocationInfo = (location: string) => {
+    if (!location) return { city: '', postcode: '' };
     
-    // Split the address by commas and remove any leading/trailing spaces
-    const parts = formattedAddress.split(',').map(part => part.trim());
+    // For addresses like "Empire Way", just return it as the city
+    if (!location.includes(',')) {
+      return { city: location, postcode: '' };
+    }
     
-    // Get the last part of the address (usually contains the postcode)
-    const lastPart = parts[parts.length - 1] || '';
+    // Split the location and clean up each part
+    const parts = location.split(',').map(part => part.trim());
     
-    // Look for postcode in UK format
-    const postcodeRegex = /[A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][A-Z]{2}/gi;
-    const postcodeMatch = formattedAddress.match(postcodeRegex);
-    const postcode = postcodeMatch ? postcodeMatch[0] : '';
+    // Look for parts that might contain a city name (e.g., "London")
+    const cityPart = parts.find(part => 
+      part.toLowerCase().includes('london') || 
+      part.toLowerCase().includes('wembley')
+    );
     
-    // Get the city from the second-to-last part of the address
-    let city = parts[parts.length - 2] || '';
+    // If we found a city part, use it, otherwise use the last non-empty part
+    const city = cityPart || parts[parts.length - 1] || '';
     
-    // Clean up city name by removing the postcode if it exists in the city part
-    city = city.replace(postcodeRegex, '').trim();
-    
-    return { city, postcode };
+    return { city, postcode: '' };
   };
 
   if (loading) {
@@ -125,18 +125,11 @@ export const History = ({ onBack }: HistoryProps) => {
             </TableHeader>
             <TableBody>
               {times.map((record, index) => {
-                const { city, postcode } = extractLocationInfo(record.formatted_address);
+                const { city } = extractLocationInfo(record.location);
                 return (
                   <TableRow key={index}>
                     <TableCell>{record.pub_name}</TableCell>
-                    <TableCell>
-                      {city && <span>{city}</span>}
-                      {postcode && (
-                        <span className="ml-2 font-medium text-muted-foreground">
-                          {postcode}
-                        </span>
-                      )}
-                    </TableCell>
+                    <TableCell>{city}</TableCell>
                     <TableCell>{record.order_type}</TableCell>
                     <TableCell>{formatTime(record.wait_time_seconds)}</TableCell>
                     <TableCell>
