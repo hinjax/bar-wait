@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -42,6 +43,26 @@ const Index = () => {
     return () => subscription.unsubscribe();
   }, []);
 
+  const handleStartTimer = (pubData: { 
+    name: string; 
+    formatted_address: string;
+    place_id?: string;
+    latitude?: number;
+    longitude?: number;
+  }) => {
+    setPubData({
+      name: pubData.name,
+      location: pubData.name,
+      formatted_address: pubData.formatted_address,
+      place_id: pubData.place_id,
+      latitude: pubData.latitude,
+      longitude: pubData.longitude,
+      orderType: '',
+      drinkDetails: ''
+    });
+    setStep('form');
+  };
+
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
@@ -50,17 +71,6 @@ const Index = () => {
       toast.success('Signed out successfully');
       setStep('home');
     }
-  };
-
-  const handleStartTimer = (pubData: { name: string; formatted_address: string }) => {
-    setPubData({
-      name: pubData.name,
-      location: pubData.name,
-      formatted_address: pubData.formatted_address,
-      orderType: '',
-      drinkDetails: ''
-    });
-    setStep('form');
   };
 
   if (step === 'auth') {
@@ -147,6 +157,7 @@ const Index = () => {
 
         {step === 'form' && (
           <PubForm
+            initialData={pubData}
             onSubmit={(data) => {
               setPubData(data);
               setStep('timer');

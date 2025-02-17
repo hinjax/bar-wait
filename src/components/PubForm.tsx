@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,6 +14,16 @@ import { ArrowLeft } from 'lucide-react';
 import { LocationPicker } from './LocationPicker';
 
 interface PubFormProps {
+  initialData?: {
+    name: string;
+    location: string;
+    orderType: string;
+    drinkDetails: string;
+    formatted_address?: string;
+    place_id?: string;
+    latitude?: number;
+    longitude?: number;
+  };
   onSubmit: (data: {
     name: string;
     location: string;
@@ -27,17 +37,32 @@ interface PubFormProps {
   onBack: () => void;
 }
 
-export const PubForm = ({ onSubmit, onBack }: PubFormProps) => {
+export const PubForm = ({ initialData, onSubmit, onBack }: PubFormProps) => {
   const [formData, setFormData] = useState({
-    name: '',
-    location: '',
-    orderType: '',
-    drinkDetails: '',
-    formatted_address: '',
-    place_id: '',
-    latitude: undefined as number | undefined,
-    longitude: undefined as number | undefined,
+    name: initialData?.name || '',
+    location: initialData?.location || '',
+    orderType: initialData?.orderType || '',
+    drinkDetails: initialData?.drinkDetails || '',
+    formatted_address: initialData?.formatted_address || '',
+    place_id: initialData?.place_id || '',
+    latitude: initialData?.latitude,
+    longitude: initialData?.longitude,
   });
+
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        name: initialData.name || '',
+        location: initialData.location || '',
+        orderType: initialData.orderType || '',
+        drinkDetails: initialData.drinkDetails || '',
+        formatted_address: initialData.formatted_address || '',
+        place_id: initialData.place_id || '',
+        latitude: initialData.latitude,
+        longitude: initialData.longitude,
+      });
+    }
+  }, [initialData]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,6 +87,7 @@ export const PubForm = ({ onSubmit, onBack }: PubFormProps) => {
       <div className="space-y-4">
         <LocationPicker
           value={formData.location}
+          initialValue={initialData?.location}
           onChange={(location, placeData) =>
             setFormData((prev) => ({
               ...prev,
@@ -78,6 +104,7 @@ export const PubForm = ({ onSubmit, onBack }: PubFormProps) => {
         <div className="space-y-2">
           <Label htmlFor="orderType">Order Type</Label>
           <Select
+            value={formData.orderType}
             onValueChange={(value) =>
               setFormData((prev) => ({ ...prev, orderType: value }))
             }
