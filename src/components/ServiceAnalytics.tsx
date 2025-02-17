@@ -1,8 +1,7 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Clock } from 'lucide-react';
+import { Search, Clock, Timer } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface DrinkStats {
@@ -19,7 +18,11 @@ interface PubStats {
   drink_stats: DrinkStats[];
 }
 
-export const ServiceAnalytics = () => {
+interface ServiceAnalyticsProps {
+  onStartTimer?: (pubData: { name: string; formatted_address: string }) => void;
+}
+
+export const ServiceAnalytics = ({ onStartTimer }: ServiceAnalyticsProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [results, setResults] = useState<PubStats[]>([]);
   const [loading, setLoading] = useState(false);
@@ -184,9 +187,25 @@ export const ServiceAnalytics = () => {
               key={pub.pub_name}
               className="p-4 border border-black/10 rounded-xl bg-white/50 backdrop-blur-sm space-y-3"
             >
-              <div>
-                <h3 className="font-medium text-black">{pub.pub_name}</h3>
-                <p className="text-sm text-muted-foreground">{pub.formatted_address}</p>
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="font-medium text-black">{pub.pub_name}</h3>
+                  <p className="text-sm text-muted-foreground">{pub.formatted_address}</p>
+                </div>
+                {onStartTimer && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onStartTimer({
+                      name: pub.pub_name,
+                      formatted_address: pub.formatted_address
+                    })}
+                    className="shrink-0"
+                  >
+                    <Timer className="h-4 w-4 mr-2" />
+                    Start Timer
+                  </Button>
+                )}
               </div>
 
               <div className="flex items-center gap-2 text-sm">

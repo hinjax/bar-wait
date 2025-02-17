@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -49,6 +48,17 @@ const Index = () => {
       toast.success('Signed out successfully');
       setStep('home');
     }
+  };
+
+  const handleStartTimer = (pubData: { name: string; formatted_address: string }) => {
+    setPubData({
+      name: pubData.name,
+      location: pubData.name,
+      formatted_address: pubData.formatted_address,
+      orderType: '',
+      drinkDetails: ''
+    });
+    setStep('form');
   };
 
   if (step === 'auth') {
@@ -103,7 +113,7 @@ const Index = () => {
               )}
             </div>
             <div className="pt-4 border-t border-black/10">
-              <NearbyPlaces />
+              <NearbyPlaces onStartTimer={handleStartTimer} />
             </div>
           </div>
         )}

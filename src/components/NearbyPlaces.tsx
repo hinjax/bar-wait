@@ -22,7 +22,11 @@ interface RecentVisit {
   created_at: string;
 }
 
-export const NearbyPlaces = () => {
+interface NearbyPlacesProps {
+  onStartTimer?: (pubData: { name: string; formatted_address: string }) => void;
+}
+
+export const NearbyPlaces = ({ onStartTimer }: NearbyPlacesProps) => {
   const [places, setPlaces] = useState<PubStats[]>([]);
   const [recentVisits, setRecentVisits] = useState<RecentVisit[]>([]);
   const [loading, setLoading] = useState(true);
@@ -166,7 +170,7 @@ export const NearbyPlaces = () => {
       </TabsContent>
 
       <TabsContent value="search">
-        <ServiceAnalytics />
+        <ServiceAnalytics onStartTimer={onStartTimer} />
       </TabsContent>
     </Tabs>
   );
