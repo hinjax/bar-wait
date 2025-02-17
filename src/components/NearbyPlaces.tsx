@@ -1,8 +1,8 @@
-
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Clock, Star, MapPin, History } from 'lucide-react';
+import { Clock, Star, MapPin, History, Search } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ServiceAnalytics } from './ServiceAnalytics';
 
 interface PubStats {
   pub_name: string;
@@ -86,14 +86,18 @@ export const NearbyPlaces = () => {
 
   return (
     <Tabs defaultValue="nearby" className="space-y-4">
-      <TabsList className="grid w-full grid-cols-2">
+      <TabsList className="grid w-full grid-cols-3">
         <TabsTrigger value="nearby">
           <MapPin className="h-4 w-4 mr-2" />
-          Nearby Places
+          Nearby
         </TabsTrigger>
         <TabsTrigger value="recent">
           <History className="h-4 w-4 mr-2" />
-          Recent Visits
+          Recent
+        </TabsTrigger>
+        <TabsTrigger value="search">
+          <Search className="h-4 w-4 mr-2" />
+          Search
         </TabsTrigger>
       </TabsList>
 
@@ -159,6 +163,10 @@ export const NearbyPlaces = () => {
             ))}
           </div>
         )}
+      </TabsContent>
+
+      <TabsContent value="search">
+        <ServiceAnalytics />
       </TabsContent>
     </Tabs>
   );
