@@ -58,6 +58,9 @@ export const Timer = ({ pubData, onComplete, onBack, autoStart = false }: TimerP
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
+      const { mins, secs } = formatTime(time);
+      const timeString = `${mins}m ${secs}s`;
+
       const { error } = await supabase.from('pub_visits').insert({
         pub_name: pubData.name,
         location: pubData.location,
@@ -85,7 +88,13 @@ export const Timer = ({ pubData, onComplete, onBack, autoStart = false }: TimerP
       setSavedTimes(updatedTimes);
       localStorage.setItem('pubTimes', JSON.stringify(updatedTimes));
       
-      toast.success('Time and rating logged successfully!');
+      toast.success(
+        `Thank you for your feedback!\n\nLocation: ${pubData.name}\nOrder: ${pubData.orderType} - ${pubData.drinkDetails}\nWait Time: ${timeString}\nRating: ${rating} stars`,
+        {
+          duration: 5000,
+        }
+      );
+      
       onComplete();
     } catch (error) {
       console.error('Error saving pub visit:', error);
