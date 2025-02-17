@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -158,6 +157,13 @@ export const Timer = ({ pubData, onComplete, onBack, autoStart = false }: TimerP
     }
   }, [showCompletion]);
 
+  const handleBack = () => {
+    if (isRunning) {
+      setIsRunning(false);
+    }
+    onBack();
+  };
+
   const { mins, secs } = formatTime(time);
 
   if (showCompletion && savedTime) {
@@ -245,7 +251,6 @@ export const Timer = ({ pubData, onComplete, onBack, autoStart = false }: TimerP
           <Button
             onClick={() => {
               onComplete();
-              // Navigate back to form to select a new drink
               onBack();
             }}
             variant="outline"
@@ -258,7 +263,6 @@ export const Timer = ({ pubData, onComplete, onBack, autoStart = false }: TimerP
           <Button
             onClick={() => {
               onComplete();
-              // You can add navigation to history here if needed
             }}
             variant="outline"
             className="w-full h-12 border-2 border-black text-black hover:bg-black/5"
@@ -278,8 +282,7 @@ export const Timer = ({ pubData, onComplete, onBack, autoStart = false }: TimerP
           type="button"
           variant="ghost"
           size="icon"
-          onClick={onBack}
-          disabled={isRunning}
+          onClick={handleBack}
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
