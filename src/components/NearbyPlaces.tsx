@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Clock, Star, MapPin, Loader2 } from 'lucide-react';
@@ -75,13 +76,13 @@ export const NearbyPlaces = ({ onStartTimer }: NearbyPlacesProps) => {
         new window.google.maps.Map(document.createElement('div'))
       );
 
-      const request = {
+      const request: google.maps.places.PlaceSearchRequest = {
         location: new window.google.maps.LatLng(
           position.coords.latitude,
           position.coords.longitude
         ),
         radius: 5000,
-        type: ['bar'] as google.maps.places.PlaceType[]
+        type: 'bar'
       };
 
       service.nearbySearch(
