@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Play, Square, Star, History, MapPin, RotateCw } from 'lucide-react';
+import { ArrowLeft, Play, Square, Star, History, MapPin, RotateCw, Clock, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -22,6 +21,18 @@ interface TimerProps {
   autoStart?: boolean;
 }
 
+interface PubStats {
+  avg_wait_time: number;
+  visit_count: number;
+  drink_stats: {
+    drink_details: string;
+    order_type: string;
+    avg_wait_time: number;
+    count: number;
+  }[];
+  avg_rating: number;
+}
+
 export const Timer = ({ pubData, onComplete, onBack, autoStart = false }: TimerProps) => {
   const [isRunning, setIsRunning] = useState(autoStart);
   const [time, setTime] = useState(0);
@@ -32,7 +43,8 @@ export const Timer = ({ pubData, onComplete, onBack, autoStart = false }: TimerP
     timeString: string;
     rating: number;
   } | null>(null);
-  
+  const [pubStats, setPubStats] = useState<PubStats | null>(null);
+
   useEffect(() => {
     let interval: number;
     if (isRunning) {
@@ -89,6 +101,62 @@ export const Timer = ({ pubData, onComplete, onBack, autoStart = false }: TimerP
     }
   };
 
+  const fetchPubStats = async () => {
+    try {
+      const { data: visits, error } = await supabase
+        .from('pub_visits')
+        .select('wait_time_seconds, rating, order_type, drink_details')
+        .eq('pub_name', pubData.name);
+
+      if (error) throw error;
+
+      if (!visits || visits.length === 0) {
+        return;
+      }
+
+      const avgWaitTime = visits.reduce((acc, visit) => acc + (visit.wait_time_seconds || 0), 0) / visits.length;
+      const avgRating = visits.reduce((acc, visit) => acc + (visit.rating || 0), 0) / visits.length;
+
+      const drinkGroups = visits.reduce((acc, visit) => {
+        const key = `${visit.order_type} - ${visit.drink_details}`;
+        if (!acc[key]) {
+          acc[key] = {
+            drink_details: visit.drink_details,
+            order_type: visit.order_type,
+            total_time: 0,
+            count: 0
+          };
+        }
+        acc[key].total_time += visit.wait_time_seconds || 0;
+        acc[key].count += 1;
+        return acc;
+      }, {} as Record<string, any>);
+
+      const drinkStats = Object.values(drinkGroups).map(group => ({
+        drink_details: group.drink_details,
+        order_type: group.order_type,
+        avg_wait_time: group.total_time / group.count,
+        count: group.count
+      }));
+
+      setPubStats({
+        avg_wait_time: avgWaitTime,
+        visit_count: visits.length,
+        drink_stats: drinkStats,
+        avg_rating: avgRating
+      });
+
+    } catch (error) {
+      console.error('Error fetching pub stats:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (showCompletion) {
+      fetchPubStats();
+    }
+  }, [showCompletion]);
+
   const { mins, secs } = formatTime(time);
 
   if (showCompletion && savedTime) {
@@ -112,6 +180,54 @@ export const Timer = ({ pubData, onComplete, onBack, autoStart = false }: TimerP
             </div>
           </div>
         </div>
+
+        {pubStats && (
+          <div className="bg-white/50 backdrop-blur-sm border border-black/10 rounded-xl p-4 space-y-4">
+            <h3 className="font-medium text-center">Pub Statistics</h3>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center space-y-1">
+                <div className="flex justify-center items-center gap-1 text-sm text-muted-foreground">
+                  <Clock className="h-4 w-4" />
+                  <span>Average Wait</span>
+                </div>
+                <p className="font-medium">
+                  {Math.round(pubStats.avg_wait_time / 60)}m {Math.round(pubStats.avg_wait_time % 60)}s
+                </p>
+              </div>
+              
+              <div className="text-center space-y-1">
+                <div className="flex justify-center items-center gap-1 text-sm text-muted-foreground">
+                  <Users className="h-4 w-4" />
+                  <span>Total Visits</span>
+                </div>
+                <p className="font-medium">{pubStats.visit_count}</p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">Wait times by drink:</p>
+              <div className="space-y-2">
+                {pubStats.drink_stats.map((stat, index) => (
+                  <div 
+                    key={index}
+                    className="bg-black/5 rounded p-2 text-sm"
+                  >
+                    <div className="flex justify-between items-center">
+                      <span>{stat.order_type} - {stat.drink_details}</span>
+                      <span className="text-muted-foreground text-xs">
+                        ({stat.count} orders)
+                      </span>
+                    </div>
+                    <div className="text-muted-foreground">
+                      Average: {Math.round(stat.avg_wait_time / 60)}m {Math.round(stat.avg_wait_time % 60)}s
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="space-y-4">
           <h3 className="text-lg font-medium text-center mb-4">What would you like to do next?</h3>
