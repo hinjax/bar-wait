@@ -6,9 +6,10 @@ import { PubForm } from '@/components/PubForm';
 import { History } from '@/components/History';
 import { NearbyPlaces } from '@/components/NearbyPlaces';
 import { AuthUI } from '@/components/AuthUI';
-import { Clock, History as HistoryIcon, LogOut } from 'lucide-react';
+import { Clock, History as HistoryIcon, LogOut, Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { ServiceAnalytics } from '@/components/ServiceAnalytics';
 
 interface PubData {
   name: string;
@@ -25,6 +26,7 @@ const Index = () => {
   const [step, setStep] = useState<'home' | 'form' | 'timer' | 'history' | 'auth'>('home');
   const [pubData, setPubData] = useState<PubData | null>(null);
   const [session, setSession] = useState<any>(null);
+  const [showSearch, setShowSearch] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -84,34 +86,59 @@ const Index = () => {
                 Monitor wait times and rate service at your favorite establishments
               </p>
             </div>
-            <div className="space-y-4">
-              <Button
-                onClick={() => session ? setStep('form') : setStep('auth')}
-                className="w-full h-14 bg-black hover:bg-black/90 text-white shadow-lg transition-all duration-300 hover:shadow-xl"
-                size="lg"
-              >
-                <Clock className="mr-2 h-5 w-5" />
-                Start New Timer
-              </Button>
-              <Button
-                onClick={() => session ? setStep('history') : setStep('auth')}
-                variant="outline"
-                className="w-full h-12 border-2 border-black text-black hover:bg-black/5 transition-all duration-300"
-              >
-                <HistoryIcon className="mr-2 h-4 w-4" />
-                View History
-              </Button>
-              {session && (
+
+            {showSearch ? (
+              <div className="space-y-4">
+                <ServiceAnalytics 
+                  onStartTimer={handleStartTimer}
+                />
                 <Button
-                  onClick={handleLogout}
                   variant="ghost"
+                  onClick={() => setShowSearch(false)}
                   className="w-full"
                 >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Sign Out
+                  Cancel Search
                 </Button>
-              )}
-            </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <Button
+                  onClick={() => setShowSearch(true)}
+                  className="w-full h-12 border-2 border-black text-black hover:bg-black/5 transition-all duration-300"
+                  variant="outline"
+                >
+                  <Search className="mr-2 h-4 w-4" />
+                  Search Places
+                </Button>
+                <Button
+                  onClick={() => session ? setStep('form') : setStep('auth')}
+                  className="w-full h-14 bg-black hover:bg-black/90 text-white shadow-lg transition-all duration-300 hover:shadow-xl"
+                  size="lg"
+                >
+                  <Clock className="mr-2 h-5 w-5" />
+                  Start New Timer
+                </Button>
+                <Button
+                  onClick={() => session ? setStep('history') : setStep('auth')}
+                  variant="outline"
+                  className="w-full h-12 border-2 border-black text-black hover:bg-black/5 transition-all duration-300"
+                >
+                  <HistoryIcon className="mr-2 h-4 w-4" />
+                  View History
+                </Button>
+                {session && (
+                  <Button
+                    onClick={handleLogout}
+                    variant="ghost"
+                    className="w-full"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sign Out
+                  </Button>
+                )}
+              </div>
+            )}
+            
             <div className="pt-4 border-t border-black/10">
               <NearbyPlaces onStartTimer={handleStartTimer} />
             </div>
