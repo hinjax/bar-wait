@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,7 @@ import { PubForm } from '@/components/PubForm';
 import { History } from '@/components/History';
 import { NearbyPlaces } from '@/components/NearbyPlaces';
 import { AuthUI } from '@/components/AuthUI';
-import { Clock, History as HistoryIcon, LogOut, Search } from 'lucide-react';
+import { History as HistoryIcon, LogOut, Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ServiceAnalytics } from '@/components/ServiceAnalytics';
@@ -151,14 +150,6 @@ const Index = () => {
                 >
                   <Search className="mr-2 h-4 w-4" />
                   Search Places
-                </Button>
-                <Button
-                  onClick={() => session ? setStep('form') : setStep('auth')}
-                  className="w-full h-14 bg-black hover:bg-black/90 text-white shadow-lg transition-all duration-300 hover:shadow-xl"
-                  size="lg"
-                >
-                  <Clock className="mr-2 h-5 w-5" />
-                  Start New Timer
                 </Button>
                 <Button
                   onClick={() => session ? setStep('history') : setStep('auth')}
