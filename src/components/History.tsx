@@ -88,9 +88,8 @@ export const History = ({ onBack }: HistoryProps) => {
       }
     }
     
-    // If no city found in either, return the default based on area
-    // In this case, Preston is the default area for the pubs
-    return 'Preston';
+    // If no city found in either, return empty string
+    return '';
   };
 
   if (loading) {
