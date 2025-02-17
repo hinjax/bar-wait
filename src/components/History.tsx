@@ -64,7 +64,7 @@ export const History = ({ onBack }: HistoryProps) => {
     if (!location) return '';
     
     // Define known cities and areas
-    const cities = ['Wembley', 'London'];
+    const cities = ['Wembley', 'London', 'Preston'];
     
     // Convert location to lowercase for case-insensitive matching
     const locationLower = location.toLowerCase();
@@ -79,8 +79,9 @@ export const History = ({ onBack }: HistoryProps) => {
       return matchedCity;
     }
     
-    // If no city is found, return "London" as default
-    return 'London';
+    // If no city is found, try to extract it from the formatted address
+    // Additional city detection logic could be added here if needed
+    return '';
   };
 
   if (loading) {
@@ -127,7 +128,7 @@ export const History = ({ onBack }: HistoryProps) => {
               {times.map((record, index) => (
                 <TableRow key={index}>
                   <TableCell>{record.pub_name}</TableCell>
-                  <TableCell>{extractCity(record.location)}</TableCell>
+                  <TableCell>{extractCity(record.formatted_address || record.location) || 'Preston'}</TableCell>
                   <TableCell>{record.order_type}</TableCell>
                   <TableCell>{formatTime(record.wait_time_seconds)}</TableCell>
                   <TableCell>
