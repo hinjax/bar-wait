@@ -98,7 +98,7 @@ export const History = ({ onBack }: HistoryProps) => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Pub</TableHead>
+                <TableHead>Establishment</TableHead>
                 <TableHead>Order</TableHead>
                 <TableHead>Time</TableHead>
                 <TableHead>Rating</TableHead>
