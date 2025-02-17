@@ -113,7 +113,8 @@ export const PubForm = ({ initialData, onSubmit, onBack }: PubFormProps) => {
               <SelectValue placeholder="Select order type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="pint">Pint</SelectItem>
+              <SelectItem value="beer">Beer</SelectItem>
+              <SelectItem value="bottles">Bottles</SelectItem>
               <SelectItem value="cocktail">Cocktail</SelectItem>
               <SelectItem value="wine">Wine</SelectItem>
               <SelectItem value="spirit">Spirit</SelectItem>
