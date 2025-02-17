@@ -1,8 +1,9 @@
 
 /// <reference types="google.maps" />
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Card } from './ui/card';
 import { Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface MapProps {
   userLocation?: { lat: number; lng: number };
@@ -19,10 +20,43 @@ export const Map = ({ userLocation, places = [], height = "300px" }: MapProps) =
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
+  const [scriptLoaded, setScriptLoaded] = useState(false);
+
+  useEffect(() => {
+    const loadGoogleMapsAPI = async () => {
+      try {
+        // Get the API key from Supabase
+        const { data, error } = await supabase
+          .from('app_secrets')
+          .select('value')
+          .eq('key', 'GOOGLE_MAPS_API_KEY')
+          .single();
+
+        if (error) throw error;
+        
+        // Create and load the script
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${data.value}&libraries=places`;
+        script.async = true;
+        script.defer = true;
+        script.onload = () => setScriptLoaded(true);
+        document.head.appendChild(script);
+
+        return () => {
+          // Cleanup script on unmount
+          document.head.removeChild(script);
+        };
+      } catch (error) {
+        console.error('Error loading Google Maps API:', error);
+      }
+    };
+
+    loadGoogleMapsAPI();
+  }, []);
 
   useEffect(() => {
     const initMap = async () => {
-      if (!mapRef.current || !userLocation) return;
+      if (!mapRef.current || !userLocation || !scriptLoaded || !window.google) return;
 
       // Initialize the map
       const map = new window.google.maps.Map(mapRef.current, {
@@ -88,9 +122,9 @@ export const Map = ({ userLocation, places = [], height = "300px" }: MapProps) =
       markersRef.current.forEach((marker) => marker.setMap(null));
       markersRef.current = [];
     };
-  }, [userLocation, places]);
+  }, [userLocation, places, scriptLoaded]);
 
-  if (!userLocation) {
+  if (!userLocation || !scriptLoaded) {
     return (
       <Card className="w-full flex items-center justify-center" style={{ height }}>
         <Loader2 className="h-6 w-6 animate-spin" />
