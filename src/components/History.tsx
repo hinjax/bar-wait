@@ -62,15 +62,23 @@ export const History = ({ onBack }: HistoryProps) => {
 
   const extractLocationInfo = (formattedAddress: string) => {
     if (!formattedAddress) return { city: '', postcode: '' };
-    const parts = formattedAddress.split(',');
-    const lastPart = parts[parts.length - 1]?.trim();
-    const secondLastPart = parts[parts.length - 2]?.trim() || '';
     
-    const postcodeMatch = lastPart?.match(/[A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][A-Z]{2}/i);
+    // Split the address by commas and remove any leading/trailing spaces
+    const parts = formattedAddress.split(',').map(part => part.trim());
+    
+    // Get the last part of the address (usually contains the postcode)
+    const lastPart = parts[parts.length - 1] || '';
+    
+    // Look for postcode in UK format
+    const postcodeRegex = /[A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][A-Z]{2}/gi;
+    const postcodeMatch = formattedAddress.match(postcodeRegex);
     const postcode = postcodeMatch ? postcodeMatch[0] : '';
     
-    // Clean up city name (remove postcode if it exists in the city part)
-    const city = secondLastPart.replace(/[A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][A-Z]{2}/i, '').trim();
+    // Get the city from the second-to-last part of the address
+    let city = parts[parts.length - 2] || '';
+    
+    // Clean up city name by removing the postcode if it exists in the city part
+    city = city.replace(postcodeRegex, '').trim();
     
     return { city, postcode };
   };
@@ -124,7 +132,7 @@ export const History = ({ onBack }: HistoryProps) => {
                     <TableCell>
                       {city && <span>{city}</span>}
                       {postcode && (
-                        <span className="ml-2 font-medium">
+                        <span className="ml-2 font-medium text-muted-foreground">
                           {postcode}
                         </span>
                       )}
