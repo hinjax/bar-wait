@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from 'react';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Clock, Star } from 'lucide-react';
 import {
@@ -57,6 +56,16 @@ export const History = ({ onBack }: HistoryProps) => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const extractPostcode = (formattedAddress: string) => {
+    if (!formattedAddress) return '';
+    // UK postcodes are typically at the end of the address
+    const parts = formattedAddress.split(',');
+    const lastPart = parts[parts.length - 1]?.trim();
+    // Basic UK postcode regex
+    const postcodeMatch = lastPart?.match(/[A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][A-Z]{2}/i);
+    return postcodeMatch ? ` (${postcodeMatch[0]})` : '';
+  };
+
   if (loading) {
     return (
       <div className="text-center py-8">
@@ -99,7 +108,12 @@ export const History = ({ onBack }: HistoryProps) => {
             <TableBody>
               {times.map((record, index) => (
                 <TableRow key={index}>
-                  <TableCell>{record.pub_name}</TableCell>
+                  <TableCell>
+                    {record.pub_name}
+                    <span className="text-muted-foreground text-sm">
+                      {extractPostcode(record.formatted_address)}
+                    </span>
+                  </TableCell>
                   <TableCell>{record.order_type}</TableCell>
                   <TableCell>{formatTime(record.wait_time_seconds)}</TableCell>
                   <TableCell>
