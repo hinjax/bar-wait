@@ -60,25 +60,27 @@ export const History = ({ onBack }: HistoryProps) => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const extractCity = (location: string) => {
+  const extractCity = (location: string): string => {
     if (!location) return '';
     
-    // For addresses like "Empire Way", just return it as is
-    if (!location.includes(',')) {
-      return location;
-    }
+    // Define known cities and areas
+    const cities = ['Wembley', 'London'];
     
-    // Split the location and clean up each part
-    const parts = location.split(',').map(part => part.trim());
+    // Convert location to lowercase for case-insensitive matching
+    const locationLower = location.toLowerCase();
     
-    // Look for parts that might contain a city name (e.g., "London")
-    const cityPart = parts.find(part => 
-      part.toLowerCase().includes('london') || 
-      part.toLowerCase().includes('wembley')
+    // Find the first matching city in the location string
+    const matchedCity = cities.find(city => 
+      locationLower.includes(city.toLowerCase())
     );
     
-    // If we found a city part, use it, otherwise use the last non-empty part
-    return cityPart || parts[parts.length - 1] || '';
+    // If we found a match, return the properly cased city name
+    if (matchedCity) {
+      return matchedCity;
+    }
+    
+    // If no city is found, return "London" as default
+    return 'London';
   };
 
   if (loading) {
