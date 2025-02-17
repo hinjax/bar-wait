@@ -60,12 +60,12 @@ export const History = ({ onBack }: HistoryProps) => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const extractLocationInfo = (location: string) => {
-    if (!location) return { city: '', postcode: '' };
+  const extractCity = (location: string) => {
+    if (!location) return '';
     
-    // For addresses like "Empire Way", just return it as the city
+    // For addresses like "Empire Way", just return it as is
     if (!location.includes(',')) {
-      return { city: location, postcode: '' };
+      return location;
     }
     
     // Split the location and clean up each part
@@ -78,9 +78,7 @@ export const History = ({ onBack }: HistoryProps) => {
     );
     
     // If we found a city part, use it, otherwise use the last non-empty part
-    const city = cityPart || parts[parts.length - 1] || '';
-    
-    return { city, postcode: '' };
+    return cityPart || parts[parts.length - 1] || '';
   };
 
   if (loading) {
@@ -116,7 +114,7 @@ export const History = ({ onBack }: HistoryProps) => {
             <TableHeader>
               <TableRow>
                 <TableHead>Establishment</TableHead>
-                <TableHead>City & Postcode</TableHead>
+                <TableHead>City</TableHead>
                 <TableHead>Order</TableHead>
                 <TableHead>Time</TableHead>
                 <TableHead>Rating</TableHead>
@@ -124,28 +122,25 @@ export const History = ({ onBack }: HistoryProps) => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {times.map((record, index) => {
-                const { city } = extractLocationInfo(record.location);
-                return (
-                  <TableRow key={index}>
-                    <TableCell>{record.pub_name}</TableCell>
-                    <TableCell>{city}</TableCell>
-                    <TableCell>{record.order_type}</TableCell>
-                    <TableCell>{formatTime(record.wait_time_seconds)}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center">
-                        {record.rating && (
-                          <>
-                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
-                            <span>{record.rating}</span>
-                          </>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>{formatDateTime(record.created_at)}</TableCell>
-                  </TableRow>
-                );
-              })}
+              {times.map((record, index) => (
+                <TableRow key={index}>
+                  <TableCell>{record.pub_name}</TableCell>
+                  <TableCell>{extractCity(record.location)}</TableCell>
+                  <TableCell>{record.order_type}</TableCell>
+                  <TableCell>{formatTime(record.wait_time_seconds)}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center">
+                      {record.rating && (
+                        <>
+                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
+                          <span>{record.rating}</span>
+                        </>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>{formatDateTime(record.created_at)}</TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </div>
