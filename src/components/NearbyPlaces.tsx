@@ -34,6 +34,55 @@ export const NearbyPlaces = ({ onStartTimer }: NearbyPlacesProps) => {
   const [locationRequested, setLocationRequested] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
+  const searchNearbyPubs = async (position: GeolocationPosition) => {
+    try {
+      const { data: apiKeyData, error: apiKeyError } = await supabase
+        .from('app_secrets')
+        .select('value')
+        .eq('key', 'GOOGLE_MAPS_API_KEY')
+        .single();
+
+      if (apiKeyError) throw apiKeyError;
+
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/place/nearbysearch/json?` +
+        `location=${position.coords.latitude},${position.coords.longitude}&` +
+        `radius=5000&` +
+        `type=bar|pub&` +
+        `key=${apiKeyData.value}`
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch nearby places');
+      }
+
+      const data = await response.json();
+      
+      if (data.status === 'OK' && data.results) {
+        const placesData = data.results.map((place: any) => ({
+          pub_name: place.name,
+          location: place.vicinity,
+          formatted_address: place.vicinity,
+          avg_rating: place.rating || 0,
+          avg_wait_time: 0, // We'll get this from our database
+          distance_meters: place.distance || 0,
+          latitude: place.geometry.location.lat,
+          longitude: place.geometry.location.lng,
+        }));
+
+        setPlaces(placesData);
+        toast.success(`Found ${placesData.length} nearby pubs and bars`);
+      } else {
+        setPlaces([]);
+        toast.info('No pubs or bars found nearby');
+      }
+    } catch (err) {
+      console.error('Error fetching nearby places:', err);
+      toast.error('Failed to fetch nearby places');
+      setError('Failed to fetch nearby places');
+    }
+  };
+
   const requestLocationAndFetchPlaces = async () => {
     setLocationRequested(true);
     setLoading(true);
@@ -57,29 +106,10 @@ export const NearbyPlaces = ({ onStartTimer }: NearbyPlacesProps) => {
         lng: position.coords.longitude
       });
 
-      const { data, error: dbError } = await supabase.rpc('get_pub_stats', {
-        lat: position.coords.latitude,
-        lng: position.coords.longitude,
-        radius_meters: 10000
-      });
-
-      if (dbError) {
-        console.error('Database error:', dbError);
-        throw new Error("Could not fetch places data");
-      }
-      
-      if (!data || data.length === 0) {
-        setPlaces([]);
-        toast.info('No establishments found within 10km');
-        return;
-      }
-      
-      const sortedPlaces = data.sort((a, b) => a.distance_meters - b.distance_meters);
-      setPlaces(sortedPlaces);
-      toast.success(`Found ${sortedPlaces.length} nearby establishments`);
+      await searchNearbyPubs(position);
       
     } catch (err) {
-      console.error('Error fetching nearby places:', err);
+      console.error('Error getting location:', err);
       let errorMessage = "An error occurred while finding nearby places";
       
       if (err instanceof GeolocationPositionError) {
