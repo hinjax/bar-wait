@@ -46,8 +46,12 @@ export const History = ({ onBack }: HistoryProps) => {
     fetchHistory();
   }, []);
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
+  const formatDateTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const formattedDate = date.toLocaleDateString();
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${formattedDate} ${hours}:${minutes}`;
   };
 
   const formatTime = (seconds: number) => {
@@ -58,10 +62,8 @@ export const History = ({ onBack }: HistoryProps) => {
 
   const extractPostcode = (formattedAddress: string) => {
     if (!formattedAddress) return '';
-    // UK postcodes are typically at the end of the address
     const parts = formattedAddress.split(',');
     const lastPart = parts[parts.length - 1]?.trim();
-    // Basic UK postcode regex
     const postcodeMatch = lastPart?.match(/[A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][A-Z]{2}/i);
     return postcodeMatch ? ` (${postcodeMatch[0]})` : '';
   };
@@ -102,7 +104,7 @@ export const History = ({ onBack }: HistoryProps) => {
                 <TableHead>Order</TableHead>
                 <TableHead>Time</TableHead>
                 <TableHead>Rating</TableHead>
-                <TableHead>Date</TableHead>
+                <TableHead>Date & Time</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -126,7 +128,7 @@ export const History = ({ onBack }: HistoryProps) => {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell>{formatDate(record.created_at)}</TableCell>
+                  <TableCell>{formatDateTime(record.created_at)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
