@@ -60,28 +60,37 @@ export const History = ({ onBack }: HistoryProps) => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const extractCity = (location: string): string => {
-    if (!location) return '';
+  const extractCity = (location: string, formatted_address: string): string => {
+    if (!location && !formatted_address) return '';
     
     // Define known cities and areas
     const cities = ['Wembley', 'London', 'Preston'];
     
-    // Convert location to lowercase for case-insensitive matching
-    const locationLower = location.toLowerCase();
-    
-    // Find the first matching city in the location string
-    const matchedCity = cities.find(city => 
-      locationLower.includes(city.toLowerCase())
-    );
-    
-    // If we found a match, return the properly cased city name
-    if (matchedCity) {
-      return matchedCity;
+    // Try formatted address first as it's more structured
+    if (formatted_address) {
+      const parts = formatted_address.split(',').map(part => part.trim());
+      for (const part of parts) {
+        const cityMatch = cities.find(city => 
+          part.toLowerCase() === city.toLowerCase()
+        );
+        if (cityMatch) return cityMatch;
+      }
     }
     
-    // If no city is found, try to extract it from the formatted address
-    // Additional city detection logic could be added here if needed
-    return '';
+    // If no city found in formatted address, try location
+    if (location) {
+      const parts = location.split(',').map(part => part.trim());
+      for (const part of parts) {
+        const cityMatch = cities.find(city => 
+          part.toLowerCase() === city.toLowerCase()
+        );
+        if (cityMatch) return cityMatch;
+      }
+    }
+    
+    // If no city found in either, return the default based on area
+    // In this case, Preston is the default area for the pubs
+    return 'Preston';
   };
 
   if (loading) {
@@ -128,7 +137,7 @@ export const History = ({ onBack }: HistoryProps) => {
               {times.map((record, index) => (
                 <TableRow key={index}>
                   <TableCell>{record.pub_name}</TableCell>
-                  <TableCell>{extractCity(record.formatted_address || record.location) || 'Preston'}</TableCell>
+                  <TableCell>{extractCity(record.location, record.formatted_address)}</TableCell>
                   <TableCell>{record.order_type}</TableCell>
                   <TableCell>{formatTime(record.wait_time_seconds)}</TableCell>
                   <TableCell>
