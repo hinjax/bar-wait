@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -148,7 +149,7 @@ const Index = () => {
                   className="w-full h-12 border-2 border-black text-black hover:bg-black/5 transition-all duration-300"
                   variant="outline"
                 >
-                  <Search className="mr-2 h-4 w-4" />
+                  <Search className="mr-2 h-4 w-4 text-black" />
                   Search Places
                 </Button>
                 <Button
@@ -156,7 +157,7 @@ const Index = () => {
                   variant="outline"
                   className="w-full h-12 border-2 border-black text-black hover:bg-black/5 transition-all duration-300"
                 >
-                  <HistoryIcon className="mr-2 h-4 w-4" />
+                  <HistoryIcon className="mr-2 h-4 w-4 text-black" />
                   View History
                 </Button>
                 {session && (
@@ -165,7 +166,7 @@ const Index = () => {
                     variant="ghost"
                     className="w-full"
                   >
-                    <LogOut className="mr-2 h-4 w-4" />
+                    <LogOut className="mr-2 h-4 w-4 text-black" />
                     Sign Out
                   </Button>
                 )}
