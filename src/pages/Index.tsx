@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -202,6 +203,7 @@ const Index = () => {
             pubData={pubData}
             onComplete={() => setStep('home')}
             onBack={() => setStep('form')}
+            autoStart={true}
           />
         )}
 

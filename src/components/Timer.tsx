@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,10 +19,11 @@ interface TimerProps {
   };
   onComplete: () => void;
   onBack: () => void;
+  autoStart?: boolean;
 }
 
-export const Timer = ({ pubData, onComplete, onBack }: TimerProps) => {
-  const [isRunning, setIsRunning] = useState(false);
+export const Timer = ({ pubData, onComplete, onBack, autoStart = false }: TimerProps) => {
+  const [isRunning, setIsRunning] = useState(autoStart);
   const [time, setTime] = useState(0);
   const [showRating, setShowRating] = useState(false);
   const [rating, setRating] = useState(0);
