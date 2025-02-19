@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { History as HistoryIcon, Search } from 'lucide-react';
 import { NearbyPlaces } from './NearbyPlaces';
 import { ServiceAnalytics } from './ServiceAnalytics';
+import { RecentEntries } from './RecentEntries';
 
 interface HomePageProps {
   showSearch: boolean;
@@ -61,8 +62,9 @@ export const HomePage = ({
             className="w-full h-12 border-2 border-black text-black hover:bg-black/5 transition-all duration-300"
           >
             <HistoryIcon className="mr-2 h-4 w-4 text-black" />
-            View History
+            View Recent
           </Button>
+          <RecentEntries />
         </div>
       )}
       
