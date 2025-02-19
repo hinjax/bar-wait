@@ -1,12 +1,11 @@
 
 import { Button } from '@/components/ui/button';
-import { History as HistoryIcon, LogOut, Search } from 'lucide-react';
+import { History as HistoryIcon, Search } from 'lucide-react';
 import { NearbyPlaces } from './NearbyPlaces';
 import { ServiceAnalytics } from './ServiceAnalytics';
 
 interface HomePageProps {
   showSearch: boolean;
-  session: any;
   onSearchToggle: (show: boolean) => void;
   onStartTimer: (pubData: {
     name: string;
@@ -16,16 +15,13 @@ interface HomePageProps {
     longitude?: number;
   }) => void;
   onHistoryClick: () => void;
-  onLogout: () => void;
 }
 
 export const HomePage = ({
   showSearch,
-  session,
   onSearchToggle,
   onStartTimer,
-  onHistoryClick,
-  onLogout
+  onHistoryClick
 }: HomePageProps) => {
   return (
     <div className="space-y-8">
@@ -67,16 +63,6 @@ export const HomePage = ({
             <HistoryIcon className="mr-2 h-4 w-4 text-black" />
             View History
           </Button>
-          {session && (
-            <Button
-              onClick={onLogout}
-              variant="ghost"
-              className="w-full"
-            >
-              <LogOut className="mr-2 h-4 w-4 text-black" />
-              Sign Out
-            </Button>
-          )}
         </div>
       )}
       
